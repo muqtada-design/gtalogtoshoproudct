@@ -31,6 +31,7 @@ const DOM = {
     cartSummaryText: document.getElementById('cart-summary-text'),
     btnOpenCartModal: document.getElementById('btn-open-cart-modal'),
     btnCheckoutWhatsapp: document.getElementById('btn-checkout-whatsapp'),
+    btnExportPdfBottom: document.getElementById('btn-export-pdf-bottom'),
     
     // Modals
     modalCart: document.getElementById('modal-cart'),
@@ -40,6 +41,7 @@ const DOM = {
     inputOrderNotes: document.getElementById('input-order-notes'),
     btnClearCart: document.getElementById('btn-clear-cart'),
     btnSendWhatsappModal: document.getElementById('btn-send-whatsapp-modal'),
+    btnExportPdfModal: document.getElementById('btn-export-pdf-modal'),
     
     // Barcode Scanner Modal
     modalBarcode: document.getElementById('modal-barcode'),
@@ -268,33 +270,33 @@ function renderProducts() {
 
             <div class="flex flex-col gap-2 mt-auto pt-2 border-t border-surface-variant dark:border-slate-700 ${!prod.inStock ? 'opacity-50 pointer-events-none' : ''}">
                 <!-- Carton Counter -->
-                <div class="flex items-center justify-between bg-surface-container-low dark:bg-slate-700/60 rounded-lg p-1">
-                    <span class="font-semibold text-xs text-on-secondary-fixed-variant dark:text-slate-300 pr-2">كرتون</span>
-                    <div class="flex items-center gap-1.5">
-                        <button class="btn-dec-carton w-7 h-7 rounded-md bg-surface dark:bg-slate-800 text-on-surface dark:text-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-[16px]">remove</span>
+                <div class="flex items-center justify-between bg-emerald-50/80 dark:bg-slate-700/80 border border-emerald-200/60 dark:border-slate-600 rounded-xl p-1.5">
+                    <span class="font-bold text-xs text-emerald-900 dark:text-emerald-300 pr-2">كرتون</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-dec-carton w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm flex items-center justify-center hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 active:scale-90 transition-all border border-slate-200 dark:border-slate-600">
+                            <span class="material-symbols-outlined text-[20px] font-bold">remove</span>
                         </button>
-                        <span class="carton-count font-bold text-xs text-on-surface dark:text-slate-100 min-w-[20px] text-center">
+                        <span class="carton-count font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 min-w-[24px] text-center">
                             ${cartData.cartons}
                         </span>
-                        <button class="btn-inc-carton w-7 h-7 rounded-md bg-surface dark:bg-slate-800 text-on-surface dark:text-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-[16px]">add</span>
+                        <button class="btn-inc-carton w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm flex items-center justify-center hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 active:scale-90 transition-all border border-slate-200 dark:border-slate-600">
+                            <span class="material-symbols-outlined text-[20px] font-bold">add</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Piece Counter -->
-                <div class="flex items-center justify-between bg-surface-container-low dark:bg-slate-700/60 rounded-lg p-1">
-                    <span class="font-semibold text-xs text-on-secondary-fixed-variant dark:text-slate-300 pr-2">قطعة</span>
-                    <div class="flex items-center gap-1.5">
-                        <button class="btn-dec-piece w-7 h-7 rounded-md bg-surface dark:bg-slate-800 text-on-surface dark:text-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-[16px]">remove</span>
+                <div class="flex items-center justify-between bg-blue-50/80 dark:bg-slate-700/80 border border-blue-200/60 dark:border-slate-600 rounded-xl p-1.5">
+                    <span class="font-bold text-xs text-blue-900 dark:text-blue-300 pr-2">قطعة</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-dec-piece w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm flex items-center justify-center hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 active:scale-90 transition-all border border-slate-200 dark:border-slate-600">
+                            <span class="material-symbols-outlined text-[20px] font-bold">remove</span>
                         </button>
-                        <span class="piece-count font-bold text-xs text-on-surface dark:text-slate-100 min-w-[20px] text-center">
+                        <span class="piece-count font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 min-w-[24px] text-center">
                             ${cartData.pieces}
                         </span>
-                        <button class="btn-inc-piece w-7 h-7 rounded-md bg-surface dark:bg-slate-800 text-on-surface dark:text-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-[16px]">add</span>
+                        <button class="btn-inc-piece w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm flex items-center justify-center hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 active:scale-90 transition-all border border-slate-200 dark:border-slate-600">
+                            <span class="material-symbols-outlined text-[20px] font-bold">add</span>
                         </button>
                     </div>
                 </div>
@@ -415,37 +417,37 @@ function renderCartModal() {
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 sm:gap-4">
                 <!-- Carton Counter -->
                 <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-slate-500 font-semibold mb-0.5">كرتون</span>
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                        <button class="btn-modal-dec-c w-5 h-5 rounded flex items-center justify-center bg-white dark:bg-slate-700 shadow-xs">
-                            <span class="material-symbols-outlined text-xs">remove</span>
+                    <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold mb-0.5">كرتون</span>
+                    <div class="flex items-center gap-1.5 bg-emerald-50 dark:bg-slate-800 p-1 rounded-xl border border-emerald-200/50 dark:border-slate-600">
+                        <button class="btn-modal-dec-c w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs hover:bg-emerald-600 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-sm font-bold">remove</span>
                         </button>
-                        <span class="font-bold text-xs px-1">${item.cartons}</span>
-                        <button class="btn-modal-inc-c w-5 h-5 rounded flex items-center justify-center bg-white dark:bg-slate-700 shadow-xs">
-                            <span class="material-symbols-outlined text-xs">add</span>
+                        <span class="font-extrabold text-xs sm:text-sm px-1 min-w-[18px] text-center">${item.cartons}</span>
+                        <button class="btn-modal-inc-c w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs hover:bg-emerald-600 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-sm font-bold">add</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Piece Counter -->
                 <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-slate-500 font-semibold mb-0.5">قطعة</span>
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                        <button class="btn-modal-dec-p w-5 h-5 rounded flex items-center justify-center bg-white dark:bg-slate-700 shadow-xs">
-                            <span class="material-symbols-outlined text-xs">remove</span>
+                    <span class="text-[10px] text-blue-700 dark:text-blue-300 font-bold mb-0.5">قطعة</span>
+                    <div class="flex items-center gap-1.5 bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/50 dark:border-slate-600">
+                        <button class="btn-modal-dec-p w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs hover:bg-blue-600 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-sm font-bold">remove</span>
                         </button>
-                        <span class="font-bold text-xs px-1">${item.pieces}</span>
-                        <button class="btn-modal-inc-p w-5 h-5 rounded flex items-center justify-center bg-white dark:bg-slate-700 shadow-xs">
-                            <span class="material-symbols-outlined text-xs">add</span>
+                        <span class="font-extrabold text-xs sm:text-sm px-1 min-w-[18px] text-center">${item.pieces}</span>
+                        <button class="btn-modal-inc-p w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs hover:bg-blue-600 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-sm font-bold">add</span>
                         </button>
                     </div>
                 </div>
 
-                <button class="btn-modal-remove text-red-500 hover:text-red-700 p-1">
-                    <span class="material-symbols-outlined text-base">delete</span>
+                <button class="btn-modal-remove text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-slate-800 p-1.5 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">delete</span>
                 </button>
             </div>
         `;
@@ -487,17 +489,22 @@ function checkoutWhatsApp() {
         return;
     }
 
-    const shopName = DOM.inputShopName.value.trim() || "غير محدد";
-    const merchantName = DOM.inputMerchantName.value.trim() || "عميل جملة";
+    // Generate and download PDF Invoice first
+    exportOrderToPDF();
+
+    const shopName = DOM.inputShopName.value.trim() || "عميل جملة";
+    const merchantName = DOM.inputMerchantName.value.trim() || "غير محدد";
     const notes = DOM.inputOrderNotes.value.trim();
 
     let message = `🛒 *طلب جديد من موقع الجملة السريعة*\n`;
+    message += `------------------------------------\n`;
+    message += `📄 *ملاحظة:* تم تحميل ملف الفاتورة الرسمية بصيغة PDF على جهازي ومرفق لكم في المحادثة.\n`;
     message += `------------------------------------\n`;
     message += `🏪 *المحل/السوبرماركت:* ${shopName}\n`;
     message += `👤 *التاجر:* ${merchantName}\n`;
     message += `📅 *التاريخ:* ${new Date().toLocaleDateString('ar-SA')}\n`;
     message += `------------------------------------\n\n`;
-    message += `📋 *تفاصيل الأصناف المطلوبة:*\n\n`;
+    message += `📋 *ملخص الأصناف المطلوبة:*\n\n`;
 
     let totalCartons = 0;
     let totalPieces = 0;
@@ -524,13 +531,165 @@ function checkoutWhatsApp() {
         message += `📝 *ملاحظات التوصيل:* ${notes}\n`;
     }
     message += `------------------------------------\n`;
-    message += `يرجى تأكيد إمكانية التجهيز وتزويدنا بالفاتورة. شكرًا لك!`;
+    message += `📎 *مرفق لكم ملف الفاتورة PDF المجهّز في هذه المحادثة. شكرًا لك!*`;
 
     const encodedText = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
     
-    window.open(whatsappUrl, '_blank');
-    showToast('جاري فتح الواتساب لإرسال الطلب...', 'success');
+    setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+        showToast('تم تحميل الفاتورة PDF! يرجى اختيار "إرفاق مستند" 📎 في الواتساب', 'success');
+    }, 1000);
+}
+
+// PDF EXPORT GENERATOR
+function exportOrderToPDF() {
+    const itemIds = Object.keys(STATE.cart);
+    if (itemIds.length === 0) {
+        showToast('السلة فارغة! يرجى إضافة منتجات قبل إنشاء الفاتورة 📄', 'warning');
+        return;
+    }
+
+    showToast('جاري إنشاء وتحضير ملف PDF...', 'info');
+
+    const shopName = DOM.inputShopName.value.trim() || "عميل جملة";
+    const merchantName = DOM.inputMerchantName.value.trim() || "غير محدد";
+    const notes = DOM.inputOrderNotes.value.trim();
+    const currentDate = new Date().toLocaleDateString('ar-SA');
+    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+
+    let totalCartons = 0;
+    let totalPieces = 0;
+
+    let rowsHTML = '';
+    itemIds.forEach((id, index) => {
+        const prod = STATE.products.find(p => p.id === id);
+        if (!prod) return;
+        const item = STATE.cart[id];
+        totalCartons += item.cartons;
+        totalPieces += item.pieces;
+
+        const totalProductUnits = (item.cartons * prod.cartonPack) + item.pieces;
+
+        rowsHTML += `
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px; text-align: center;">${index + 1}</td>
+                <td style="padding: 10px; font-weight: bold; color: #1e293b;">${prod.name}</td>
+                <td style="padding: 10px; text-align: center; color: #475569;">${prod.cartonPack} حبة/كرتون</td>
+                <td style="padding: 10px; text-align: center; font-weight: bold; color: #006c49;">${item.cartons} كرتون</td>
+                <td style="padding: 10px; text-align: center; font-weight: bold; color: #2563eb;">${item.pieces} قطعة</td>
+                <td style="padding: 10px; text-align: center; font-weight: bold; background: #f8fafc;">${totalProductUnits} حبة</td>
+            </tr>
+        `;
+    });
+
+    const pdfContainer = document.createElement('div');
+    pdfContainer.id = 'pdf-export-container';
+    pdfContainer.style.position = 'fixed';
+    pdfContainer.style.left = '-9999px';
+    pdfContainer.style.top = '0';
+    pdfContainer.style.width = '790px';
+    pdfContainer.style.padding = '24px';
+    pdfContainer.style.backgroundColor = '#ffffff';
+    pdfContainer.style.color = '#0f172a';
+    pdfContainer.style.fontFamily = "'IBM Plex Sans Arabic', sans-serif";
+    pdfContainer.style.direction = 'rtl';
+
+    pdfContainer.innerHTML = `
+        <div style="border: 2px solid #006c49; border-radius: 12px; padding: 24px; background: #ffffff;">
+            <!-- PDF Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #006c49; padding-bottom: 16px; margin-bottom: 20px;">
+                <div>
+                    <h1 style="font-size: 24px; font-weight: 800; color: #006c49; margin: 0;">📦 الجملة السريعة</h1>
+                    <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">قائمة طلب توريد بضائع جملة (Purchase Order)</p>
+                </div>
+                <div style="text-align: left;">
+                    <span style="background: #006c49; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${orderId}</span>
+                    <p style="font-size: 12px; color: #475569; margin: 6px 0 0 0;">📅 التاريخ: ${currentDate}</p>
+                </div>
+            </div>
+
+            <!-- Merchant Info Box -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+                <div>
+                    <strong style="color: #166534; font-size: 13px;">🏪 المحل / السوبرماركت:</strong>
+                    <span style="font-size: 14px; font-weight: bold; color: #0f172a; margin-right: 6px;">${shopName}</span>
+                </div>
+                <div>
+                    <strong style="color: #166534; font-size: 13px;">👤 اسم التاجر:</strong>
+                    <span style="font-size: 14px; font-weight: bold; color: #0f172a; margin-right: 6px;">${merchantName}</span>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #006c49; color: #ffffff;">
+                        <th style="padding: 10px; border-radius: 0 6px 6px 0;">#</th>
+                        <th style="padding: 10px; text-align: right;">اسم المنتج</th>
+                        <th style="padding: 10px; text-align: center;">التعبئة</th>
+                        <th style="padding: 10px; text-align: center;">الكراتين</th>
+                        <th style="padding: 10px; text-align: center;">القطع</th>
+                        <th style="padding: 10px; text-align: center; border-radius: 6px 0 0 6px;">إجمالي القطع</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHTML}
+                </tbody>
+            </table>
+
+            <!-- Summary Box -->
+            <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="font-size: 13px;">
+                    <span style="color: #64748b;">إجمالي الأصناف:</span>
+                    <strong style="color: #0f172a; font-size: 14px; margin-right: 4px;">${itemIds.length} صنف</strong>
+                </div>
+                <div style="font-size: 14px; font-weight: bold; color: #006c49;">
+                    <span>إجمالي الكراتين: </span>
+                    <span style="background: #dcfce7; color: #15803d; padding: 2px 10px; border-radius: 6px;">${totalCartons} كرتون</span>
+                </div>
+                <div style="font-size: 14px; font-weight: bold; color: #2563eb;">
+                    <span>إجمالي القطع المنفصلة: </span>
+                    <span style="background: #dbeafe; color: #1d4ed8; padding: 2px 10px; border-radius: 6px;">${totalPieces} قطعة</span>
+                </div>
+            </div>
+
+            ${notes ? `
+                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 12px; color: #92400e;">
+                    <strong>📝 ملاحظات التوصيل والطلب:</strong> ${notes}
+                </div>
+            ` : ''}
+
+            <!-- Footer -->
+            <div style="margin-top: 24px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; color: #94a3b8;">
+                تم توليد قائمة الطلبية بواسطة منصة "الجملة السريعة" ⚡
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(pdfContainer);
+
+    const opt = {
+        margin:       8,
+        filename:     `طلب_جملة_${shopName.replace(/\s+/g, '_')}_${orderId}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (typeof html2pdf !== 'undefined') {
+        html2pdf().set(opt).from(pdfContainer).save().then(() => {
+            document.body.removeChild(pdfContainer);
+            showToast('تم تحميل قائمة المنتجات بصيغة PDF بنجاح 📄', 'success');
+        }).catch(err => {
+            console.error(err);
+            document.body.removeChild(pdfContainer);
+            window.print();
+        });
+    } else {
+        document.body.removeChild(pdfContainer);
+        window.print();
+    }
 }
 
 // BARCODE SCANNER LOGIC
@@ -688,6 +847,8 @@ function setupEventListeners() {
     DOM.btnOpenCartModal.addEventListener('click', openCartModal);
     DOM.btnCheckoutWhatsapp.addEventListener('click', checkoutWhatsApp);
     DOM.btnSendWhatsappModal.addEventListener('click', checkoutWhatsApp);
+    if (DOM.btnExportPdfBottom) DOM.btnExportPdfBottom.addEventListener('click', exportOrderToPDF);
+    if (DOM.btnExportPdfModal) DOM.btnExportPdfModal.addEventListener('click', exportOrderToPDF);
     
     DOM.btnClearCart.addEventListener('click', () => {
         if (confirm('هل أنت تأكد من فرز وتفريغ السلة بالكامل؟')) {

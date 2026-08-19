@@ -139,3 +139,28 @@
 [dir="rtl"] .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+
+/* Enhanced Counter Button Touch Targets */
+.btn-dec-carton, .btn-inc-carton, .btn-dec-piece, .btn-inc-piece {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+/* PDF Print styles fallback */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #pdf-export-container, #pdf-export-container * {
+        visibility: visible;
+    }
+    #pdf-export-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+}

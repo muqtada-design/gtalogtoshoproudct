@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة طلبية - الجملة السريعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff;
+            }
+            .invoice-card {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen">
+
+    <!-- Top Action Bar (Print / PDF Download) -->
+    <div class="no-print max-w-4xl mx-auto mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-md border border-slate-200">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">📦</span>
+            <span class="font-bold text-slate-800">الجملة السريعة - فاتورة أونلاين</span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="window.print()" class="bg-slate-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl hover:bg-slate-900 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">print</span>
+                <span>طباعة الفاتورة</span>
+            </button>
+            <button onclick="downloadPDF()" class="bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl hover:bg-emerald-800 flex items-center gap-1 shadow-md">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                <span>تحميل PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Invoice Render Card Container -->
+    <div id="invoice-render-area" class="invoice-card max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-emerald-700 pb-6 mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-emerald-800 flex items-center gap-2">
+                    <span>📦 الجملة السريعة</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">وثيقة طلبية رسمية وتوريد بضائع جملة (Order Invoice)</p>
+            </div>
+            <div class="text-right sm:text-left">
+                <span id="order-id-badge" class="bg-emerald-700 text-white font-mono font-bold text-xs px-3 py-1 rounded-full">
+                    ORD-000000
+                </span>
+                <p id="order-date-text" class="text-xs text-slate-600 mt-2 font-medium">📅 التاريخ: --/--/----</p>
+            </div>
+        </div>
+
+        <!-- Customer & Merchant Details -->
+        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+            <div>
+                <span class="text-slate-500 block text-[11px] font-semibold mb-0.5">👤 اسم الزبون:</span>
+                <strong id="cust-name" class="text-slate-900 font-extrabold text-base">عميل غير محدد</strong>
+            </div>
+            <div>
+                <span class="text-slate-500 block text-[11px] font-semibold mb-0.5">🏪 المحل / الشركة:</span>
+                <strong id="cust-shop" class="text-slate-900 font-extrabold text-base">سوبرماركت / محل</strong>
+            </div>
+            <div>
+                <span class="text-slate-500 block text-[11px] font-semibold mb-0.5">📱 رقم الهاتف للتواصل:</span>
+                <strong id="cust-phone" class="text-emerald-800 font-bold font-mono">--</strong>
+            </div>
+            <div>
+                <span class="text-slate-500 block text-[11px] font-semibold mb-0.5">📍 العنوان الكامل:</span>
+                <strong id="cust-address" class="text-slate-900 font-bold">--</strong>
+            </div>
+        </div>
+
+        <!-- Items Table (الأعمدة الأربعة حصراً) -->
+        <div class="overflow-x-auto mb-6">
+            <table class="w-full text-xs sm:text-sm text-right border-collapse border border-slate-200">
+                <thead>
+                    <tr class="bg-emerald-800 text-white font-bold">
+                        <th class="p-3 border-b border-emerald-900 w-2/5">1. اسم المنتج</th>
+                        <th class="p-3 text-center border-b border-emerald-900 w-1/5">2. التعبئة</th>
+                        <th class="p-3 text-center border-b border-emerald-900 w-1/5">3. الكمية / العدد</th>
+                        <th class="p-3 border-b border-emerald-900 w-1/5">4. ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-items-body">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary Totals -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs sm:text-sm">
+            <div>
+                <span class="text-slate-500">إجمالي الأصناف المطلوبة:</span>
+                <strong id="total-items-count" class="text-slate-900 font-bold mr-1">0 صنف</strong>
+            </div>
+            <div class="flex gap-4">
+                <div class="bg-emerald-100/70 border border-emerald-300 px-3 py-1.5 rounded-xl font-bold text-emerald-800">
+                    الكراتين: <span id="total-cartons-count">0</span> كرتون
+                </div>
+                <div class="bg-blue-100/70 border border-blue-300 px-3 py-1.5 rounded-xl font-bold text-blue-800">
+                    القطع: <span id="total-pieces-count">0</span> قطعة
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Notes -->
+        <div id="notes-container" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900 mb-6">
+            <strong>📝 ملاحظات الزبون:</strong>
+            <p id="notes-text" class="mt-1 leading-relaxed text-slate-800 font-medium"></p>
+        </div>
+
+        <!-- Footer Notice -->
+        <div class="text-center pt-6 border-t border-slate-200 text-xs text-slate-400">
+            تم توليد هذه الفاتورة الإلكترونية عبر منصة "الجملة السريعة" ⚡
+        </div>
+    </div>
+
+    <script>
+        // Parse order data from URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawData = urlParams.get('data');
+
+            if (!rawData) {
+                alert('لم يتم العثور على بيانات الفاتورة');
+                return;
+            }
+
+            try {
+                const order = JSON.parse(decodeURIComponent(atob(rawData)));
+                
+                document.getElementById('order-id-badge').textContent = order.orderId || 'ORD-' + Math.floor(100000 + Math.random()*900000);
+                document.getElementById('order-date-text').textContent = `📅 التاريخ: ${order.date || new Date().toLocaleDateString('ar-SA')}`;
+                
+                document.getElementById('cust-name').textContent = order.merchantName || 'عميل جملة';
+                document.getElementById('cust-shop').textContent = order.shopName || 'سوبرماركت / محل';
+                document.getElementById('cust-phone').textContent = order.phone || 'غير مسجل';
+                document.getElementById('cust-address').textContent = order.address || 'غير مسجل';
+
+                if (order.notes && order.notes.trim() !== '') {
+                    document.getElementById('notes-container').classList.remove('hidden');
+                    document.getElementById('notes-text').textContent = order.notes;
+                }
+
+                const tbody = document.getElementById('invoice-items-body');
+                tbody.innerHTML = '';
+                
+                let totalCartons = 0;
+                let totalPieces = 0;
+
+                order.items.forEach((item, index) => {
+                    totalCartons += item.cartons || 0;
+                    totalPieces += item.pieces || 0;
+
+                    let packType = [];
+                    if (item.cartons > 0) packType.push('كارتون');
+                    if (item.pieces > 0) packType.push('قطع');
+                    const packTypeStr = packType.join(' + ') || 'قطع';
+
+                    let qtyStr = [];
+                    if (item.cartons > 0) qtyStr.push(`${item.cartons} كارتون`);
+                    if (item.pieces > 0) qtyStr.push(`${item.pieces} قطعة`);
+                    const quantityText = qtyStr.join(' + ') || '0';
+
+                    const itemNote = item.notes || order.notes || '-';
+
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-slate-200 hover:bg-slate-50 transition-colors";
+                    row.innerHTML = `
+                        <td class="p-3 font-bold text-slate-800 border-l border-slate-200">${item.name}</td>
+                        <td class="p-3 text-center border-l border-slate-200 font-semibold text-slate-700">
+                            ${packTypeStr}
+                            <span class="block text-[11px] text-slate-400 font-normal">(${item.cartonPack} حبة/كارتون)</span>
+                        </td>
+                        <td class="p-3 text-center border-l border-slate-200 font-extrabold text-emerald-800 bg-emerald-50/30">${quantityText}</td>
+                        <td class="p-3 text-slate-600 text-xs">${itemNote}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('total-items-count').textContent = `${order.items.length} صنف`;
+                document.getElementById('total-cartons-count').textContent = totalCartons;
+                document.getElementById('total-pieces-count').textContent = totalPieces;
+
+            } catch (e) {
+                console.error('Error parsing order data:', e);
+                alert('حدث خطأ أثناء قراءة بيانات الطلب');
+            }
+        });
+
+        function downloadPDF() {
+            const element = document.getElementById('invoice-render-area');
+            const custName = document.getElementById('cust-name').textContent || 'طلب';
+            
+            const opt = {
+                margin:       8,
+                filename:     `فاتورة_طلب_${custName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>

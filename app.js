@@ -36,8 +36,10 @@ const DOM = {
     // Modals
     modalCart: document.getElementById('modal-cart'),
     cartItemsList: document.getElementById('cart-items-list'),
-    inputShopName: document.getElementById('input-shop-name'),
     inputMerchantName: document.getElementById('input-merchant-name'),
+    inputShopName: document.getElementById('input-shop-name'),
+    inputCustomerPhone: document.getElementById('input-customer-phone'),
+    inputCustomerAddress: document.getElementById('input-customer-address'),
     inputOrderNotes: document.getElementById('input-order-notes'),
     btnClearCart: document.getElementById('btn-clear-cart'),
     btnSendWhatsappModal: document.getElementById('btn-send-whatsapp-modal'),
@@ -481,7 +483,7 @@ function renderCartModal() {
     });
 }
 
-// WHATSAPP ORDER GENERATOR
+// WHATSAPP ORDER GENERATOR WITH ONLINE PDF LINK
 function checkoutWhatsApp() {
     const itemIds = Object.keys(STATE.cart);
     if (itemIds.length === 0) {
@@ -489,25 +491,18 @@ function checkoutWhatsApp() {
         return;
     }
 
-    // Generate and download PDF Invoice first
-    exportOrderToPDF();
-
-    const shopName = DOM.inputShopName.value.trim() || "عميل جملة";
-    const merchantName = DOM.inputMerchantName.value.trim() || "غير محدد";
-    const notes = DOM.inputOrderNotes.value.trim();
-
-    let message = `🛒 *طلب جديد من موقع الجملة السريعة*\n`;
-    message += `------------------------------------\n`;
-    message += `📄 *ملاحظة:* تم تحميل ملف الفاتورة الرسمية بصيغة PDF على جهازي ومرفق لكم في المحادثة.\n`;
-    message += `------------------------------------\n`;
-    message += `🏪 *المحل/السوبرماركت:* ${shopName}\n`;
-    message += `👤 *التاجر:* ${merchantName}\n`;
-    message += `📅 *التاريخ:* ${new Date().toLocaleDateString('ar-SA')}\n`;
-    message += `------------------------------------\n\n`;
-    message += `📋 *ملخص الأصناف المطلوبة:*\n\n`;
+    const merchantName = DOM.inputMerchantName ? DOM.inputMerchantName.value.trim() || "عميل غير محدد" : "عميل جملة";
+    const shopName = DOM.inputShopName ? DOM.inputShopName.value.trim() || "سوبرماركت / محل" : "سوبرماركت / محل";
+    const phone = DOM.inputCustomerPhone ? DOM.inputCustomerPhone.value.trim() || "غير مسجل" : "غير مسجل";
+    const address = DOM.inputCustomerAddress ? DOM.inputCustomerAddress.value.trim() || "غير مسجل" : "غير مسجل";
+    const notes = DOM.inputOrderNotes ? DOM.inputOrderNotes.value.trim() : "";
+    const orderDate = new Date().toLocaleDateString('ar-SA');
+    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
     let totalCartons = 0;
     let totalPieces = 0;
+    let itemsData = [];
+    let itemsText = "";
 
     itemIds.forEach((id, index) => {
         const prod = STATE.products.find(p => p.id === id);
@@ -517,78 +512,154 @@ function checkoutWhatsApp() {
         totalCartons += item.cartons;
         totalPieces += item.pieces;
 
-        message += `${index + 1}. *${prod.name}*\n`;
-        message += `   تعبئة: ${prod.cartonPack} حبة/كرتون\n`;
+        itemsData.push({
+            name: prod.name,
+            cartonPack: prod.cartonPack,
+            cartons: item.cartons,
+            pieces: item.pieces
+        });
+
+        itemsText += `${index + 1}. *${prod.name}*\n`;
+        itemsText += `   تعبئة: ${prod.cartonPack} حبة/كرتون\n`;
         let qtyText = [];
         if (item.cartons > 0) qtyText.push(`[${item.cartons} كرتون]`);
         if (item.pieces > 0) qtyText.push(`[${item.pieces} قطعة]`);
-        message += `   الكمية: ${qtyText.join(' + ')}\n\n`;
+        itemsText += `   الكمية: ${qtyText.join(' + ')}\n\n`;
     });
 
+    // Create Order Object for Online PDF Invoice link
+    const orderPayload = {
+        orderId: orderId,
+        date: orderDate,
+        merchantName: merchantName,
+        shopName: shopName,
+        phone: phone,
+        address: address,
+        notes: notes,
+        items: itemsData
+    };
+
+    // Base64 Encode order payload
+    const jsonStr = JSON.stringify(orderPayload);
+    const encodedPayload = btoa(unescape(encodeURIComponent(jsonStr)));
+    
+    // Construct base URL for invoice.html
+    const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+    const invoicePdfUrl = `${baseUrl}invoice.html?data=${encodeURIComponent(encodedPayload)}`;
+
+    let message = `🛒 *طلب جديد من موقع الجملة السريعة*\n`;
+    message += `------------------------------------\n`;
+    message += `👤 *اسم الزبون:* ${merchantName}\n`;
+    message += `🏪 *المحل/الشركة:* ${shopName}\n`;
+    message += `📱 *رقم الهاتف:* ${phone}\n`;
+    message += `📍 *العنوان:* ${address}\n`;
+    message += `📅 *التاريخ:* ${orderDate}\n`;
+    message += `------------------------------------\n\n`;
+    message += `📋 *تفاصيل المواد المطلوبة:*\n\n`;
+    message += itemsText;
     message += `------------------------------------\n`;
     message += `📊 *إجمالي الطلب:* ${totalCartons} كرتون و ${totalPieces} قطعة.\n`;
     if (notes) {
         message += `📝 *ملاحظات التوصيل:* ${notes}\n`;
+        message += `------------------------------------\n`;
     }
-    message += `------------------------------------\n`;
-    message += `📎 *مرفق لكم ملف الفاتورة PDF المجهّز في هذه المحادثة. شكرًا لك!*`;
+    message += `📄 *رابط عرض وتحميل الفاتورة PDF أونلاين:*\n`;
+    message += `${invoicePdfUrl}\n\n`;
+    message += `يرجى تأكيد استلام وتجهيز الطلبية. شكرًا لك!`;
 
     const encodedText = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
     
-    setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-        showToast('تم تحميل الفاتورة PDF! يرجى اختيار "إرفاق مستند" 📎 في الواتساب', 'success');
-    }, 1000);
+    window.open(whatsappUrl, '_blank');
+    showToast('تم إرسال الطلبية مع رابط الفاتورة PDF عبر الواتساب بنجاح 📲✨', 'success');
 }
 
-// PDF EXPORT GENERATOR
-function exportOrderToPDF() {
+// PDF PREVIEW & EXPORT GENERATOR (4 COLUMNS EXCLUSIVELY)
+function previewOrderPDF() {
     const itemIds = Object.keys(STATE.cart);
     if (itemIds.length === 0) {
-        showToast('السلة فارغة! يرجى إضافة منتجات قبل إنشاء الفاتورة 📄', 'warning');
+        showToast('السلة فارغة! يرجى إضافة منتجات قبل معاينة الفاتورة 📄', 'warning');
         return;
     }
 
-    showToast('جاري إنشاء وتحضير ملف PDF...', 'info');
+    showToast('جاري تحضير ومعاينة قائمة الطلب PDF...', 'info');
 
-    const shopName = DOM.inputShopName.value.trim() || "عميل جملة";
-    const merchantName = DOM.inputMerchantName.value.trim() || "غير محدد";
-    const notes = DOM.inputOrderNotes.value.trim();
+    const merchantName = DOM.inputMerchantName ? DOM.inputMerchantName.value.trim() || "عميل غير محدد" : "عميل جملة";
+    const shopName = DOM.inputShopName ? DOM.inputShopName.value.trim() || "سوبرماركت / محل" : "سوبرماركت / محل";
+    const phone = DOM.inputCustomerPhone ? DOM.inputCustomerPhone.value.trim() || "غير مسجل" : "غير مسجل";
+    const address = DOM.inputCustomerAddress ? DOM.inputCustomerAddress.value.trim() || "غير مسجل" : "غير مسجل";
+    const notes = DOM.inputOrderNotes ? DOM.inputOrderNotes.value.trim() : "";
     const currentDate = new Date().toLocaleDateString('ar-SA');
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
     let totalCartons = 0;
     let totalPieces = 0;
+    let itemsData = [];
 
     let rowsHTML = '';
     itemIds.forEach((id, index) => {
         const prod = STATE.products.find(p => p.id === id);
         if (!prod) return;
         const item = STATE.cart[id];
-        totalCartons += item.cartons;
-        totalPieces += item.pieces;
+        totalCartons += item.cartons || 0;
+        totalPieces += item.pieces || 0;
 
-        const totalProductUnits = (item.cartons * prod.cartonPack) + item.pieces;
+        let packTypeStr = [];
+        if (item.cartons > 0) packTypeStr.push('كارتون');
+        if (item.pieces > 0) packTypeStr.push('قطع');
+        const finalPackType = packTypeStr.join(' + ') || 'قطع';
+
+        let qtyStr = [];
+        if (item.cartons > 0) qtyStr.push(`${item.cartons} كارتون`);
+        if (item.pieces > 0) qtyStr.push(`${item.pieces} قطعة`);
+        const finalQtyStr = qtyStr.join(' + ') || '0';
+
+        const itemNote = notes || '-';
+
+        itemsData.push({
+            name: prod.name,
+            cartonPack: prod.cartonPack,
+            cartons: item.cartons,
+            pieces: item.pieces,
+            notes: itemNote
+        });
 
         rowsHTML += `
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px; text-align: center;">${index + 1}</td>
-                <td style="padding: 10px; font-weight: bold; color: #1e293b;">${prod.name}</td>
-                <td style="padding: 10px; text-align: center; color: #475569;">${prod.cartonPack} حبة/كرتون</td>
-                <td style="padding: 10px; text-align: center; font-weight: bold; color: #006c49;">${item.cartons} كرتون</td>
-                <td style="padding: 10px; text-align: center; font-weight: bold; color: #2563eb;">${item.pieces} قطعة</td>
-                <td style="padding: 10px; text-align: center; font-weight: bold; background: #f8fafc;">${totalProductUnits} حبة</td>
+            <tr style="border-bottom: 1px solid #cbd5e1;">
+                <td style="padding: 10px; font-weight: bold; color: #0f172a; text-align: right; border-left: 1px solid #cbd5e1;">${prod.name}</td>
+                <td style="padding: 10px; text-align: center; color: #334155; font-weight: 600; border-left: 1px solid #cbd5e1;">
+                    ${finalPackType}
+                    <span style="display: block; font-size: 11px; color: #64748b; font-weight: normal;">(${prod.cartonPack} حبة/كارتون)</span>
+                </td>
+                <td style="padding: 10px; text-align: center; font-weight: 800; color: #006c49; background: #f0fdf4; border-left: 1px solid #cbd5e1;">${finalQtyStr}</td>
+                <td style="padding: 10px; text-align: right; color: #475569; font-size: 12px;">${itemNote}</td>
             </tr>
         `;
     });
 
+    // Create Order Data Payload for Online View Link
+    const orderPayload = {
+        orderId: orderId,
+        date: currentDate,
+        merchantName: merchantName,
+        shopName: shopName,
+        phone: phone,
+        address: address,
+        notes: notes,
+        items: itemsData
+    };
+    const jsonStr = JSON.stringify(orderPayload);
+    const encodedPayload = btoa(unescape(encodeURIComponent(jsonStr)));
+    const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+    const invoicePdfUrl = `${baseUrl}invoice.html?data=${encodeURIComponent(encodedPayload)}`;
+
+    // Build PDF HTML Container matching the 4 required columns
     const pdfContainer = document.createElement('div');
     pdfContainer.id = 'pdf-export-container';
     pdfContainer.style.position = 'fixed';
     pdfContainer.style.left = '-9999px';
     pdfContainer.style.top = '0';
-    pdfContainer.style.width = '790px';
+    pdfContainer.style.width = '800px';
     pdfContainer.style.padding = '24px';
     pdfContainer.style.backgroundColor = '#ffffff';
     pdfContainer.style.color = '#0f172a';
@@ -597,11 +668,11 @@ function exportOrderToPDF() {
 
     pdfContainer.innerHTML = `
         <div style="border: 2px solid #006c49; border-radius: 12px; padding: 24px; background: #ffffff;">
-            <!-- PDF Header -->
+            <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #006c49; padding-bottom: 16px; margin-bottom: 20px;">
                 <div>
                     <h1 style="font-size: 24px; font-weight: 800; color: #006c49; margin: 0;">📦 الجملة السريعة</h1>
-                    <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">قائمة طلب توريد بضائع جملة (Purchase Order)</p>
+                    <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">قائمة طلبية توريد بضائع جملة (Order Specification)</p>
                 </div>
                 <div style="text-align: left;">
                     <span style="background: #006c49; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${orderId}</span>
@@ -609,28 +680,34 @@ function exportOrderToPDF() {
                 </div>
             </div>
 
-            <!-- Merchant Info Box -->
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+            <!-- Customer & Merchant Details Card -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
                 <div>
-                    <strong style="color: #166534; font-size: 13px;">🏪 المحل / السوبرماركت:</strong>
-                    <span style="font-size: 14px; font-weight: bold; color: #0f172a; margin-right: 6px;">${shopName}</span>
+                    <strong style="color: #166534;">👤 اسم الزبون:</strong>
+                    <span style="font-weight: bold; color: #0f172a; margin-right: 6px;">${merchantName}</span>
                 </div>
                 <div>
-                    <strong style="color: #166534; font-size: 13px;">👤 اسم التاجر:</strong>
-                    <span style="font-size: 14px; font-weight: bold; color: #0f172a; margin-right: 6px;">${merchantName}</span>
+                    <strong style="color: #166534;">🏪 المحل / الشركة:</strong>
+                    <span style="font-weight: bold; color: #0f172a; margin-right: 6px;">${shopName}</span>
+                </div>
+                <div>
+                    <strong style="color: #166534;">📱 رقم الهاتف:</strong>
+                    <span style="font-weight: bold; color: #0f172a; margin-right: 6px;">${phone}</span>
+                </div>
+                <div>
+                    <strong style="color: #166534;">📍 العنوان الكامل:</strong>
+                    <span style="font-weight: bold; color: #0f172a; margin-right: 6px;">${address}</span>
                 </div>
             </div>
 
-            <!-- Items Table -->
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+            <!-- 4 Columns Table Exclusively -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
                 <thead>
-                    <tr style="background: #006c49; color: #ffffff;">
-                        <th style="padding: 10px; border-radius: 0 6px 6px 0;">#</th>
-                        <th style="padding: 10px; text-align: right;">اسم المنتج</th>
-                        <th style="padding: 10px; text-align: center;">التعبئة</th>
-                        <th style="padding: 10px; text-align: center;">الكراتين</th>
-                        <th style="padding: 10px; text-align: center;">القطع</th>
-                        <th style="padding: 10px; text-align: center; border-radius: 6px 0 0 6px;">إجمالي القطع</th>
+                    <tr style="background: #006c49; color: #ffffff; font-weight: bold;">
+                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #005236; width: 40%;">1. اسم المنتج</th>
+                        <th style="padding: 10px; text-align: center; border-bottom: 2px solid #005236; width: 20%;">2. التعبئة</th>
+                        <th style="padding: 10px; text-align: center; border-bottom: 2px solid #005236; width: 20%;">3. الكمية / العدد</th>
+                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #005236; width: 20%;">4. ملاحظات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -638,30 +715,23 @@ function exportOrderToPDF() {
                 </tbody>
             </table>
 
-            <!-- Summary Box -->
-            <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                <div style="font-size: 13px;">
-                    <span style="color: #64748b;">إجمالي الأصناف:</span>
-                    <strong style="color: #0f172a; font-size: 14px; margin-right: 4px;">${itemIds.length} صنف</strong>
+            <!-- Summary Totals -->
+            <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 13px;">
+                <div>
+                    <span style="color: #64748b;">إجمالي الأصناف المختلفة:</span>
+                    <strong style="color: #0f172a; margin-right: 4px;">${itemIds.length} صنف</strong>
                 </div>
-                <div style="font-size: 14px; font-weight: bold; color: #006c49;">
+                <div style="font-weight: bold; color: #006c49;">
                     <span>إجمالي الكراتين: </span>
-                    <span style="background: #dcfce7; color: #15803d; padding: 2px 10px; border-radius: 6px;">${totalCartons} كرتون</span>
+                    <span style="background: #dcfce7; color: #15803d; padding: 2px 10px; border-radius: 6px;">${totalCartons} كارتون</span>
                 </div>
-                <div style="font-size: 14px; font-weight: bold; color: #2563eb;">
-                    <span>إجمالي القطع المنفصلة: </span>
+                <div style="font-weight: bold; color: #2563eb;">
+                    <span>إجمالي القطع: </span>
                     <span style="background: #dbeafe; color: #1d4ed8; padding: 2px 10px; border-radius: 6px;">${totalPieces} قطعة</span>
                 </div>
             </div>
 
-            ${notes ? `
-                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 12px; color: #92400e;">
-                    <strong>📝 ملاحظات التوصيل والطلب:</strong> ${notes}
-                </div>
-            ` : ''}
-
-            <!-- Footer -->
-            <div style="margin-top: 24px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; color: #94a3b8;">
+            <div style="margin-top: 20px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; color: #94a3b8;">
                 تم توليد قائمة الطلبية بواسطة منصة "الجملة السريعة" ⚡
             </div>
         </div>
@@ -670,25 +740,27 @@ function exportOrderToPDF() {
     document.body.appendChild(pdfContainer);
 
     const opt = {
-        margin:       8,
-        filename:     `طلب_جملة_${shopName.replace(/\s+/g, '_')}_${orderId}.pdf`,
+        margin:       6,
+        filename:     `قائمة_طلب_${merchantName.replace(/\s+/g, '_')}_${orderId}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, logging: false },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     if (typeof html2pdf !== 'undefined') {
-        html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        // Output as Blob URL for immediate PDF preview in new tab
+        html2pdf().set(opt).from(pdfContainer).output('bloburl').then((pdfBlobUrl) => {
             document.body.removeChild(pdfContainer);
-            showToast('تم تحميل قائمة المنتجات بصيغة PDF بنجاح 📄', 'success');
+            window.open(pdfBlobUrl, '_blank');
+            showToast('تم فتح المعاينة المباشرة لملف PDF في تبويب جديد 👁️📄', 'success');
         }).catch(err => {
-            console.error(err);
+            console.error('PDF Preview fallback:', err);
             document.body.removeChild(pdfContainer);
-            window.print();
+            window.open(invoicePdfUrl, '_blank');
         });
     } else {
         document.body.removeChild(pdfContainer);
-        window.print();
+        window.open(invoicePdfUrl, '_blank');
     }
 }
 
@@ -847,8 +919,8 @@ function setupEventListeners() {
     DOM.btnOpenCartModal.addEventListener('click', openCartModal);
     DOM.btnCheckoutWhatsapp.addEventListener('click', checkoutWhatsApp);
     DOM.btnSendWhatsappModal.addEventListener('click', checkoutWhatsApp);
-    if (DOM.btnExportPdfBottom) DOM.btnExportPdfBottom.addEventListener('click', exportOrderToPDF);
-    if (DOM.btnExportPdfModal) DOM.btnExportPdfModal.addEventListener('click', exportOrderToPDF);
+    if (DOM.btnExportPdfBottom) DOM.btnExportPdfBottom.addEventListener('click', previewOrderPDF);
+    if (DOM.btnExportPdfModal) DOM.btnExportPdfModal.addEventListener('click', previewOrderPDF);
     
     DOM.btnClearCart.addEventListener('click', () => {
         if (confirm('هل أنت تأكد من فرز وتفريغ السلة بالكامل؟')) {

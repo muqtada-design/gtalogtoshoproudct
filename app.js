@@ -32,6 +32,7 @@ const DOM = {
     btnOpenCartModal: document.getElementById('btn-open-cart-modal'),
     btnCheckoutWhatsapp: document.getElementById('btn-checkout-whatsapp'),
     btnExportPdfBottom: document.getElementById('btn-export-pdf-bottom'),
+    btnPrintCartBottom: document.getElementById('btn-print-cart-bottom'),
     
     // Modals
     modalCart: document.getElementById('modal-cart'),
@@ -44,6 +45,7 @@ const DOM = {
     btnClearCart: document.getElementById('btn-clear-cart'),
     btnSendWhatsappModal: document.getElementById('btn-send-whatsapp-modal'),
     btnExportPdfModal: document.getElementById('btn-export-pdf-modal'),
+    btnPrintCartModal: document.getElementById('btn-print-cart-modal'),
     
     // Barcode Scanner Modal
     modalBarcode: document.getElementById('modal-barcode'),
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
     setupEventListeners();
     populateSampleBarcodes();
+    autoRestoreOrderFromUrl();
 });
 
 // THEME MANAGEMENT
@@ -483,6 +486,18 @@ function renderCartModal() {
     });
 }
 
+// UTF-8 SAFE BASE64 ENCODER FOR ALL BROWSERS & MOBILE DEVICES
+function safeEncodeOrderPayload(obj) {
+    try {
+        const jsonStr = JSON.stringify(obj);
+        return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+            return String.fromCharCode('0x' + p1);
+        }));
+    } catch(e) {
+        return encodeURIComponent(JSON.stringify(obj));
+    }
+}
+
 // WHATSAPP ORDER GENERATOR WITH ONLINE PDF LINK
 function checkoutWhatsApp() {
     const itemIds = Object.keys(STATE.cart);
@@ -491,7 +506,7 @@ function checkoutWhatsApp() {
         return;
     }
 
-    const merchantName = DOM.inputMerchantName ? DOM.inputMerchantName.value.trim() || "عميل غير محدد" : "عميل جملة";
+    const merchantName = DOM.inputMerchantName ? DOM.inputMerchantName.value.trim() || "عميل جملة" : "عميل جملة";
     const shopName = DOM.inputShopName ? DOM.inputShopName.value.trim() || "سوبرماركت / محل" : "سوبرماركت / محل";
     const phone = DOM.inputCustomerPhone ? DOM.inputCustomerPhone.value.trim() || "غير مسجل" : "غير مسجل";
     const address = DOM.inputCustomerAddress ? DOM.inputCustomerAddress.value.trim() || "غير مسجل" : "غير مسجل";
@@ -509,14 +524,16 @@ function checkoutWhatsApp() {
         if (!prod) return;
         const item = STATE.cart[id];
         
-        totalCartons += item.cartons;
-        totalPieces += item.pieces;
+        totalCartons += item.cartons || 0;
+        totalPieces += item.pieces || 0;
 
         itemsData.push({
             name: prod.name,
+            image: prod.image,
             cartonPack: prod.cartonPack,
             cartons: item.cartons,
-            pieces: item.pieces
+            pieces: item.pieces,
+            notes: notes || '-'
         });
 
         itemsText += `${index + 1}. *${prod.name}*\n`;
@@ -527,7 +544,7 @@ function checkoutWhatsApp() {
         itemsText += `   الكمية: ${qtyText.join(' + ')}\n\n`;
     });
 
-    // Create Order Object for Online PDF Invoice link
+    // Create Order Object Payload
     const orderPayload = {
         orderId: orderId,
         date: orderDate,
@@ -539,13 +556,16 @@ function checkoutWhatsApp() {
         items: itemsData
     };
 
-    // Base64 Encode order payload
-    const jsonStr = JSON.stringify(orderPayload);
-    const encodedPayload = btoa(unescape(encodeURIComponent(jsonStr)));
+    // Save to localStorage for instant fallback
+    localStorage.setItem('current_wholesale_order', JSON.stringify(orderPayload));
+
+    // UTF-8 Safe Base64 Encode order payload
+    const encodedPayload = safeEncodeOrderPayload(orderPayload);
     
-    // Construct base URL for invoice.html
+    // Construct base URL for invoice.html and direct order link
     const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
     const invoicePdfUrl = `${baseUrl}invoice.html?data=${encodeURIComponent(encodedPayload)}`;
+    const directOrderLink = `${window.location.origin}${window.location.pathname}?order=${encodeURIComponent(encodedPayload)}`;
 
     let message = `🛒 *طلب جديد من موقع الجملة السريعة*\n`;
     message += `------------------------------------\n`;
@@ -563,7 +583,9 @@ function checkoutWhatsApp() {
         message += `📝 *ملاحظات التوصيل:* ${notes}\n`;
         message += `------------------------------------\n`;
     }
-    message += `📄 *رابط عرض وتحميل الفاتورة PDF أونلاين:*\n`;
+    message += `🔗 *رابط معاينة الفاتورة والطلب مباشر:*\n`;
+    message += `${directOrderLink}\n\n`;
+    message += `📄 *رابط وثيقة الفاتورة PDF أونلاين:*\n`;
     message += `${invoicePdfUrl}\n\n`;
     message += `يرجى تأكيد استلام وتجهيز الطلبية. شكرًا لك!`;
 
@@ -571,7 +593,168 @@ function checkoutWhatsApp() {
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
     
     window.open(whatsappUrl, '_blank');
-    showToast('تم إرسال الطلبية مع رابط الفاتورة PDF عبر الواتساب بنجاح 📲✨', 'success');
+    showToast('تم إرسال الطلبية مع الرابط المباشر والفاتورة عبر الواتساب بنجاح 📲✨', 'success');
+}
+
+// DIRECT A4 PRINT ORDER FUNCTION
+function printCartOrder() {
+    const itemIds = Object.keys(STATE.cart);
+    if (itemIds.length === 0) {
+        showToast('السلة فارغة! يرجى إضافة منتجات لطباعة القائمة 📄', 'warning');
+        return;
+    }
+
+    const merchantName = DOM.inputMerchantName ? DOM.inputMerchantName.value.trim() || "عميل جملة" : "عميل جملة";
+    const shopName = DOM.inputShopName ? DOM.inputShopName.value.trim() || "سوبرماركت / محل" : "سوبرماركت / محل";
+    const phone = DOM.inputCustomerPhone ? DOM.inputCustomerPhone.value.trim() || "غير مسجل" : "غير مسجل";
+    const address = DOM.inputCustomerAddress ? DOM.inputCustomerAddress.value.trim() || "غير مسجل" : "غير مسجل";
+    const notes = DOM.inputOrderNotes ? DOM.inputOrderNotes.value.trim() : "";
+    const currentDate = new Date().toLocaleDateString('ar-SA');
+    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+
+    let totalCartons = 0;
+    let totalPieces = 0;
+
+    let rowsHTML = '';
+    itemIds.forEach((id, index) => {
+        const prod = STATE.products.find(p => p.id === id);
+        if (!prod) return;
+        const item = STATE.cart[id];
+        totalCartons += item.cartons || 0;
+        totalPieces += item.pieces || 0;
+
+        let packTypeStr = [];
+        if (item.cartons > 0) packTypeStr.push('كرتون');
+        if (item.pieces > 0) packTypeStr.push('قطعة');
+        const finalPackType = packTypeStr.join(' + ') || 'قطعة';
+
+        let qtyStr = [];
+        if (item.cartons > 0) qtyStr.push(`${item.cartons} كارتون`);
+        if (item.pieces > 0) qtyStr.push(`${item.pieces} قطعة`);
+        const finalQtyStr = qtyStr.join(' + ') || '0';
+
+        const itemNote = notes || '-';
+        const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80';
+        const imgSrc = prod.image || defaultImg;
+
+        rowsHTML += `
+            <tr style="border-bottom: 1px solid #cbd5e1;">
+                <td style="padding: 6px; text-align: center; border-left: 1px solid #cbd5e1;">
+                    <img src="${imgSrc}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; margin: 0 auto;">
+                </td>
+                <td style="padding: 10px; font-weight: bold; color: #0f172a; text-align: right; border-left: 1px solid #cbd5e1;">${prod.name}</td>
+                <td style="padding: 10px; text-align: center; color: #334155; font-weight: 600; border-left: 1px solid #cbd5e1;">
+                    ${finalPackType}
+                    <span style="display: block; font-size: 11px; color: #64748b; font-weight: normal;">(${prod.cartonPack} حبة/كارتون)</span>
+                </td>
+                <td style="padding: 10px; text-align: center; font-weight: 800; color: #006c49; background: #f0fdf4; border-left: 1px solid #cbd5e1;">${finalQtyStr}</td>
+                <td style="padding: 10px; text-align: right; color: #475569; font-size: 12px;">${itemNote}</td>
+            </tr>
+        `;
+    });
+
+    const printableContainer = document.getElementById('printable-order-sheet');
+    if (printableContainer) {
+        printableContainer.innerHTML = `
+            <div style="border: 2px solid #006c49; border-radius: 12px; padding: 24px; background: #ffffff; width: 100%; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #006c49; padding-bottom: 16px; margin-bottom: 20px;">
+                    <div>
+                        <h1 style="font-size: 24px; font-weight: 800; color: #006c49; margin: 0;">📦 الجملة السريعة</h1>
+                        <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">قائمة طلبية توريد وتجهيز بضائع جملة (Order Specification)</p>
+                    </div>
+                    <div style="text-align: left;">
+                        <span style="background: #006c49; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${orderId}</span>
+                        <p style="font-size: 12px; color: #475569; margin: 6px 0 0 0;">📅 التاريخ: ${currentDate}</p>
+                    </div>
+                </div>
+
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                    <div><strong style="color: #166534;">👤 اسم الزبون:</strong> <span style="font-weight: bold; color: #0f172a;">${merchantName}</span></div>
+                    <div><strong style="color: #166534;">🏪 المحل / الشركة:</strong> <span style="font-weight: bold; color: #0f172a;">${shopName}</span></div>
+                    <div><strong style="color: #166534;">📱 رقم الهاتف:</strong> <span style="font-weight: bold; color: #0f172a;">${phone}</span></div>
+                    <div><strong style="color: #166534;">📍 العنوان الكامل:</strong> <span style="font-weight: bold; color: #0f172a;">${address}</span></div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
+                    <thead>
+                        <tr style="background: #006c49; color: #ffffff; font-weight: bold;">
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #005236; width: 60px;">صورة</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #005236; width: 35%;">اسم المنتج</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #005236; width: 20%;">نوع التعبئة</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #005236; width: 20%;">الكمية / العدد</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #005236; width: 25%;">ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHTML}</tbody>
+                </table>
+
+                <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 13px;">
+                    <div><span style="color: #64748b;">إجمالي الأصناف:</span> <strong style="color: #0f172a;">${itemIds.length} صنف</strong></div>
+                    <div style="font-weight: bold; color: #006c49;"><span>إجمالي الكراتين: </span><span style="background: #dcfce7; color: #15803d; padding: 2px 10px; border-radius: 6px;">${totalCartons} كارتون</span></div>
+                    <div style="font-weight: bold; color: #2563eb;"><span>إجمالي القطع: </span><span style="background: #dbeafe; color: #1d4ed8; padding: 2px 10px; border-radius: 6px;">${totalPieces} قطعة</span></div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; color: #94a3b8;">
+                    تم توليد هذا الطلب بواسطة منصة "الجملة السريعة" ⚡
+                </div>
+            </div>
+        `;
+    }
+
+    window.print();
+}
+
+// AUTO-RESTORE ORDER FROM URL PAYLOAD
+function autoRestoreOrderFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawOrderData = urlParams.get('order') || urlParams.get('data');
+    if (!rawOrderData) return;
+
+    try {
+        let orderObj = null;
+        try {
+            const decodedStr = decodeURIComponent(Array.prototype.map.call(atob(rawOrderData), function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            orderObj = JSON.parse(decodedStr);
+        } catch (e1) {
+            try {
+                orderObj = JSON.parse(decodeURIComponent(rawOrderData));
+            } catch (e2) {}
+        }
+
+        if (!orderObj || !orderObj.items || orderObj.items.length === 0) return;
+
+        STATE.cart = {};
+        orderObj.items.forEach(item => {
+            const prod = STATE.products.find(p => p.name === item.name || p.id === item.id);
+            if (prod) {
+                STATE.cart[prod.id] = {
+                    cartons: item.cartons || 0,
+                    pieces: item.pieces || 0
+                };
+            }
+        });
+
+        saveCart();
+
+        if (DOM.inputMerchantName && orderObj.merchantName) DOM.inputMerchantName.value = orderObj.merchantName;
+        if (DOM.inputShopName && orderObj.shopName) DOM.inputShopName.value = orderObj.shopName;
+        if (DOM.inputCustomerPhone && orderObj.phone) DOM.inputCustomerPhone.value = orderObj.phone;
+        if (DOM.inputCustomerAddress && orderObj.address) DOM.inputCustomerAddress.value = orderObj.address;
+        if (DOM.inputOrderNotes && orderObj.notes) DOM.inputOrderNotes.value = orderObj.notes;
+
+        renderProducts();
+        updateCartUI();
+        renderCartModal();
+
+        setTimeout(() => {
+            openCartModal();
+            showToast(`تم فتح واستعادة طلبية (${orderObj.merchantName || 'الزبون'}) تلقائياً 🛒✨`, 'success');
+        }, 400);
+    } catch(e) {
+        console.error('Error auto-restoring order from URL:', e);
+    }
 }
 
 // PDF PREVIEW & EXPORT GENERATOR (4 COLUMNS EXCLUSIVELY)
@@ -618,6 +801,7 @@ function previewOrderPDF() {
 
         itemsData.push({
             name: prod.name,
+            image: prod.image,
             cartonPack: prod.cartonPack,
             cartons: item.cartons,
             pieces: item.pieces,
@@ -648,8 +832,11 @@ function previewOrderPDF() {
         notes: notes,
         items: itemsData
     };
-    const jsonStr = JSON.stringify(orderPayload);
-    const encodedPayload = btoa(unescape(encodeURIComponent(jsonStr)));
+
+    // Save to localStorage for instant fallback
+    localStorage.setItem('current_wholesale_order', JSON.stringify(orderPayload));
+
+    const encodedPayload = safeEncodeOrderPayload(orderPayload);
     const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
     const invoicePdfUrl = `${baseUrl}invoice.html?data=${encodeURIComponent(encodedPayload)}`;
 
@@ -921,6 +1108,8 @@ function setupEventListeners() {
     DOM.btnSendWhatsappModal.addEventListener('click', checkoutWhatsApp);
     if (DOM.btnExportPdfBottom) DOM.btnExportPdfBottom.addEventListener('click', previewOrderPDF);
     if (DOM.btnExportPdfModal) DOM.btnExportPdfModal.addEventListener('click', previewOrderPDF);
+    if (DOM.btnPrintCartBottom) DOM.btnPrintCartBottom.addEventListener('click', printCartOrder);
+    if (DOM.btnPrintCartModal) DOM.btnPrintCartModal.addEventListener('click', printCartOrder);
     
     DOM.btnClearCart.addEventListener('click', () => {
         if (confirm('هل أنت تأكد من فرز وتفريغ السلة بالكامل؟')) {

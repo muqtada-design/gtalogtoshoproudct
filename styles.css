@@ -56,6 +56,16 @@
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes bounceCart {
+    0%, 100% { transform: scale(1); }
+    40% { transform: scale(1.25); }
+    70% { transform: scale(0.9); }
+}
+
+.bounce-cart-anim {
+    animation: bounceCart 0.4s ease-in-out;
+}
+
 .animate-pulse-subtle {
     animation: pulseSubtle 2s infinite ease-in-out;
 }
@@ -147,20 +157,8 @@
     touch-action: manipulation;
 }
 
-/* PDF Print styles fallback */
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #pdf-export-container, #pdf-export-container * {
-        visibility: visible;
-    }
-    #pdf-export-container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 20px;
-    }
+/* إخفاء الشارات والبطاقات الحمراء لبيع الكرتون */
+.bg-rose-50, .text-rose-700, .border-rose-200 {
+    display: none !important;
 }
+

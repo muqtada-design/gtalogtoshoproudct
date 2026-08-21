@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body {
@@ -45,7 +44,7 @@
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
 
-    <!-- Top Action Bar (Print / PDF Download - Hidden on Print) -->
+    <!-- Top Action Bar (Print - Hidden on Print) -->
     <div class="no-print max-w-4xl mx-auto mb-6 flex flex-wrap justify-between items-center bg-white p-4 rounded-2xl shadow-md border border-slate-200 gap-3">
         <div class="flex items-center gap-2">
             <span class="text-2xl">📦</span>
@@ -58,10 +57,6 @@
             <button onclick="window.print()" class="bg-slate-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl hover:bg-slate-900 flex items-center justify-center gap-1 shadow-sm">
                 <span class="material-symbols-outlined text-sm">print</span>
                 <span>طباعة الفاتورة</span>
-            </button>
-            <button onclick="downloadPDF()" class="bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl hover:bg-emerald-800 flex items-center justify-center gap-1 shadow-md">
-                <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
-                <span>تحميل PDF</span>
             </button>
         </div>
     </div>
@@ -152,38 +147,60 @@
     </div>
 
     <script>
-        // Safe UTF-8 Base64 Decoder function for all browsers & mobile devices (iOS/Android)
-        function safeDecodeOrder(str) {
-            if (!str) return null;
+        // Multi-stage Robust UTF-8 Decoder Function for Arabic Chars (Zero Errors)
+        function safeDecodeOrder(rawStr) {
+            if (!rawStr) return null;
+            let str = rawStr.trim();
+
+            // Tier 1: decodeURIComponent(escape(atob(str)))
             try {
-                // Base64 to UTF-8
-                const decodedStr = decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+                const decoded = decodeURIComponent(escape(atob(str)));
+                const parsed = JSON.parse(decoded);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch(e1) {}
+
+            // Tier 2: decodeURIComponent(atob(str))
+            try {
+                const decoded = decodeURIComponent(atob(str));
+                const parsed = JSON.parse(decoded);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch(e2) {}
+
+            // Tier 3: Array map atob
+            try {
+                const decoded = decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                 }).join(''));
-                return JSON.parse(decodedStr);
-            } catch (e1) {
-                try {
-                    return JSON.parse(decodeURIComponent(str));
-                } catch (e2) {
-                    try {
-                        return JSON.parse(str);
-                    } catch (e3) {
-                        return null;
-                    }
-                }
-            }
+                const parsed = JSON.parse(decoded);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch(e3) {}
+
+            // Tier 4: decodeURIComponent(str)
+            try {
+                const decoded = decodeURIComponent(str);
+                const parsed = JSON.parse(decoded);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch(e4) {}
+
+            // Tier 5: Direct JSON Parse
+            try {
+                const parsed = JSON.parse(str);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch(e5) {}
+
+            return null;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             let order = null;
             const urlParams = new URLSearchParams(window.location.search);
-            const rawData = urlParams.get('data');
+            const rawData = urlParams.get('data') || urlParams.get('order');
 
             if (rawData) {
                 order = safeDecodeOrder(rawData);
             }
 
-            // Fallback to localStorage if URL parameter is missing or failed
+            // Fallback 1: Read current_wholesale_order from localStorage
             if (!order) {
                 const saved = localStorage.getItem('current_wholesale_order');
                 if (saved) {
@@ -193,10 +210,39 @@
                 }
             }
 
+            // Fallback 2: Read wholesale_cart from localStorage
+            if (!order) {
+                const savedCart = localStorage.getItem('wholesale_cart');
+                if (savedCart) {
+                    try {
+                        const cartObj = JSON.parse(savedCart);
+                        if (cartObj && typeof cartObj === 'object') {
+                            const keys = Object.keys(cartObj);
+                            if (keys.length > 0) {
+                                order = {
+                                    orderId: 'ORD-' + Math.floor(100000 + Math.random()*900000),
+                                    date: new Date().toLocaleDateString('ar-SA'),
+                                    merchantName: 'عميل جملة',
+                                    shopName: 'سوبرماركت / محل',
+                                    phone: 'غير مسجل',
+                                    address: 'غير مسجل',
+                                    items: keys.map(id => ({
+                                        name: id,
+                                        cartonPack: 12,
+                                        cartons: cartObj[id].cartons || 0,
+                                        pieces: cartObj[id].pieces || 0
+                                    }))
+                                };
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+
             if (!order || !order.items || order.items.length === 0) {
                 document.getElementById('invoice-items-body').innerHTML = `
                     <tr>
-                        <td colspan="4" class="p-8 text-center text-slate-400">
+                        <td colspan="5" class="p-8 text-center text-slate-400">
                             لا توجد بيانات متاحة حالياً لهذه الفاتورة. يرجى تصفح السلة والطلب من جديد.
                         </td>
                     </tr>
@@ -218,7 +264,7 @@
                 document.getElementById('notes-text').textContent = order.notes;
             }
 
-            // Render Table Rows (4 Columns Exclusively)
+            // Render Table Rows
             const tbody = document.getElementById('invoice-items-body');
             tbody.innerHTML = '';
             
@@ -240,7 +286,6 @@
                 const quantityText = qtyStr.join(' + ') || '0';
 
                 const itemNote = item.notes || order.notes || '-';
-
                 const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80';
                 const imgSrc = item.image && item.image.trim() !== '' ? item.image : defaultImg;
 
@@ -253,7 +298,7 @@
                     <td class="p-3 font-bold text-slate-800 border-l border-slate-200">${item.name}</td>
                     <td class="p-3 text-center border-l border-slate-200 font-semibold text-slate-700">
                         ${packTypeStr}
-                        <span class="block text-[11px] text-slate-400 font-normal">(${item.cartonPack} حبة/كارتون)</span>
+                        <span class="block text-[11px] text-slate-400 font-normal">(${item.cartonPack || 12} حبة/كارتون)</span>
                     </td>
                     <td class="p-3 text-center border-l border-slate-200 font-extrabold text-emerald-800 bg-emerald-50/40">${quantityText}</td>
                     <td class="p-3 text-slate-600 text-xs">${itemNote}</td>
@@ -265,21 +310,6 @@
             document.getElementById('total-cartons-count').textContent = totalCartons;
             document.getElementById('total-pieces-count').textContent = totalPieces;
         });
-
-        function downloadPDF() {
-            const element = document.getElementById('invoice-render-area');
-            const custName = document.getElementById('cust-name').textContent || 'طلب';
-            
-            const opt = {
-                margin:       6,
-                filename:     `فاتورة_طلب_${custName.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save();
-        }
     </script>
 </body>
 </html>

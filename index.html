@@ -12,12 +12,19 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     
-    <!-- HTML5 QRCode Scanner & html2pdf libraries -->
+    <!-- HTML5 QRCode Scanner library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- html2pdf.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=4">
+    <style>
+        .bg-rose-50, .text-rose-700, .border-rose-200, [class*="rose"] {
+            display: none !important;
+        }
+    </style>
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -25,119 +32,63 @@
             theme: {
                 extend: {
                     colors: {
-                        "surface-tint": "#006c49",
-                        "on-tertiary-fixed-variant": "#41474e",
-                        "surface-container": "#eceef0",
-                        "primary-fixed-dim": "#4edea3",
-                        "secondary-fixed": "#d8e3fb",
-                        "tertiary-fixed-dim": "#c1c7cf",
                         "primary": "#006c49",
-                        "on-tertiary-container": "#333a40",
-                        "on-secondary-fixed-variant": "#3c475a",
-                        "on-background": "#191c1e",
-                        "on-primary-fixed-variant": "#005236",
+                        "primary-hover": "#005236",
                         "primary-container": "#10b981",
-                        "on-secondary": "#ffffff",
-                        "inverse-on-surface": "#eff1f3",
-                        "inverse-surface": "#2d3133",
-                        "on-tertiary-fixed": "#161c22",
-                        "outline-variant": "#bbcabf",
-                        "surface-container-lowest": "#ffffff",
-                        "secondary": "#545f73",
-                        "surface-bright": "#f7f9fb",
-                        "tertiary-container": "#9da3ab",
-                        "on-primary-container": "#00422b",
-                        "secondary-fixed-dim": "#bcc7de",
-                        "inverse-primary": "#4edea3",
-                        "on-error": "#ffffff",
-                        "background": "#f8fafc",
-                        "tertiary-fixed": "#dde3eb",
                         "on-primary": "#ffffff",
-                        "primary-fixed": "#6ffbbe",
-                        "surface-container-low": "#f2f4f6",
-                        "surface-dim": "#d8dadc",
-                        "error": "#ba1a1a",
-                        "tertiary": "#595f66",
-                        "on-surface": "#191c1e",
+                        "background": "#f8fafc",
                         "surface": "#ffffff",
-                        "on-secondary-container": "#586377",
-                        "on-error-container": "#93000a",
-                        "error-container": "#ffdad6",
-                        "outline": "#6c7a71",
-                        "surface-container-highest": "#e0e3e5",
-                        "on-secondary-fixed": "#111c2d",
-                        "surface-variant": "#e0e3e5",
-                        "surface-container-high": "#e6e8ea",
-                        "on-tertiary": "#ffffff",
-                        "on-primary-fixed": "#002113",
-                        "on-surface-variant": "#3c4a42",
-                        "secondary-container": "#d5e0f8"
+                        "surface-variant": "#e0e3e5"
                     },
                     borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
                         "xl": "0.75rem",
-                        "2xl": "1.5rem",
-                        "full": "9999px"
-                    },
-                    spacing: {
-                        "gutter": "1rem",
-                        "stack-sm": "0.5rem",
-                        "stack-lg": "1.5rem",
-                        "margin-mobile": "1.25rem",
-                        "stack-md": "1rem",
-                        "safe": "env(safe-area-inset-bottom, 20px)"
+                        "2xl": "1.5rem"
                     },
                     fontFamily: {
-                        sans: ["IBM Plex Sans Arabic", "sans-serif"],
-                        "body-md": ["IBM Plex Sans Arabic", "sans-serif"],
-                        "label-lg": ["IBM Plex Sans Arabic", "sans-serif"],
-                        "headline-md": ["IBM Plex Sans Arabic", "sans-serif"]
+                        sans: ["IBM Plex Sans Arabic", "sans-serif"]
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-background text-on-background dark:bg-slate-900 dark:text-slate-100 min-h-screen pb-32 font-sans transition-colors duration-200">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen pb-28 font-sans transition-colors duration-200">
 
-    <!-- Notifications Container -->
+    <!-- Notifications Toast Container -->
     <div id="toast-container"></div>
 
     <!-- Top Navigation Header -->
-    <header class="bg-surface dark:bg-slate-800/90 shadow-sm sticky top-0 z-40 backdrop-blur-md transition-colors border-b border-slate-200 dark:border-slate-700">
+    <header class="bg-white/90 dark:bg-slate-800/90 shadow-sm sticky top-0 z-40 backdrop-blur-md transition-colors border-b border-slate-200 dark:border-slate-700">
         <div class="flex flex-row justify-between items-center w-full px-4 h-16 max-w-7xl mx-auto">
-            <!-- Right Actions: Side Menu Button -->
-            <div class="flex items-center gap-2">
-                <button id="btn-open-menu" aria-label="القائمة الرئيسية" class="p-2 text-on-surface-variant dark:text-slate-200 hover:bg-surface-container-high dark:hover:bg-slate-700 transition-colors active:scale-95 duration-100 rounded-full flex items-center justify-center">
+            <!-- Right Actions: Side Menu Button & Logo -->
+            <div class="flex items-center gap-3">
+                <button id="btn-open-menu" aria-label="القائمة الرئيسية" class="p-2 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 duration-100 rounded-full flex items-center justify-center">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                <a href="index.html" class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                         ⚡
                     </div>
-                    <h1 class="font-headline-md text-xl text-primary dark:text-emerald-400 font-bold tracking-tight">
-                        الجملة السريعة
-                    </h1>
-                </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-lg sm:text-xl text-emerald-800 dark:text-emerald-400 font-bold tracking-tight leading-none">
+                            الجملة السريعة
+                        </h1>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">كتالوج الطلبات الرقمية</span>
+                    </div>
+                </a>
             </div>
 
             <!-- Left Actions: Barcode Scanner & Dark Mode -->
             <div class="flex items-center gap-1 sm:gap-2">
-                <!-- Add Product Quick Button -->
-                <button id="btn-open-add-product" title="إضافة منتج جديد" class="p-2 text-primary dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-full transition-all flex items-center gap-1 font-medium text-sm">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    <span class="hidden sm:inline">منتج جديد</span>
-                </button>
 
                 <!-- Dark Mode Toggle -->
-                <button id="btn-theme-toggle" aria-label="تبديل الوضع" class="p-2 text-on-surface-variant dark:text-amber-400 hover:bg-surface-container-high dark:hover:bg-slate-700 transition-colors rounded-full flex items-center justify-center">
+                <button id="btn-theme-toggle" aria-label="تبديل الوضع" class="p-2 text-slate-600 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-full flex items-center justify-center">
                     <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
                 </button>
 
                 <!-- Barcode Scanner Button -->
-                <button id="btn-open-barcode" aria-label="مسح الباركود" class="p-2 text-primary dark:text-emerald-400 hover:bg-primary-container/20 transition-colors active:scale-95 duration-100 rounded-full flex items-center justify-center bg-primary/10">
-                    <span class="material-symbols-outlined">barcode_scanner</span>
+                <button id="btn-open-barcode" aria-label="مسح الباركود" class="p-2 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors active:scale-95 duration-100 rounded-full flex items-center justify-center bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-700">
+                    <span class="material-symbols-outlined text-lg">barcode_scanner</span>
                 </button>
             </div>
         </div>
@@ -150,7 +101,7 @@
                 </div>
                 <input id="search-input" 
                        type="text" 
-                       class="bg-surface-container-lowest dark:bg-slate-700/70 border border-outline-variant dark:border-slate-600 text-on-surface dark:text-white text-sm rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full pr-10 pl-10 p-2.5 transition-colors placeholder:text-slate-400 shadow-sm" 
+                       class="bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-xs sm:text-sm rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 block w-full pr-10 pl-10 p-2.5 transition-colors placeholder:text-slate-400 shadow-inner" 
                        placeholder="ابحث باسم المنتج، الفئة أو رقم الباركود..."/>
                 <button id="btn-clear-search" class="hidden absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <span class="material-symbols-outlined text-lg">close</span>
@@ -160,23 +111,23 @@
     </header>
 
     <!-- Category Filter Navigation -->
-    <nav class="bg-surface dark:bg-slate-800 sticky top-[112px] z-30 shadow-[0_4px_20px_rgba(30,41,59,0.03)] border-b border-slate-200 dark:border-slate-700/60">
+    <nav class="bg-white dark:bg-slate-800 sticky top-[112px] z-30 shadow-sm border-b border-slate-200 dark:border-slate-700/60">
         <div id="categories-container" class="flex overflow-x-auto no-scrollbar gap-2 px-4 py-2.5 max-w-7xl mx-auto">
-            <!-- Categories will be dynamically rendered here -->
+            <!-- Categories rendered dynamically -->
         </div>
     </nav>
 
     <!-- Sub-header Stats & Sorting Bar -->
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
         <div class="flex items-center gap-2">
-            <span id="products-count-badge" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-full font-semibold">
+            <span id="products-count-badge" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-0.5 rounded-full font-semibold">
                 جاري التحميل...
             </span>
-            <span id="active-filter-label" class="hidden text-primary dark:text-emerald-400 font-medium"></span>
+            <span id="active-filter-label" class="hidden text-emerald-700 dark:text-emerald-400 font-medium"></span>
         </div>
         <div class="flex items-center gap-2">
-            <label for="sort-select" class="hidden sm:inline">الترتيب:</label>
-            <select id="sort-select" class="bg-transparent border border-slate-300 dark:border-slate-600 rounded-lg text-xs py-1 px-2 text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary">
+            <label for="sort-select" class="hidden sm:inline font-medium">الترتيب:</label>
+            <select id="sort-select" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-xs py-1 px-2 text-slate-700 dark:text-slate-300 focus:ring-emerald-600 focus:border-emerald-600">
                 <option value="default">الافتراضي</option>
                 <option value="name-asc">الاسم (أ - ي)</option>
                 <option value="in-stock">المتوفر أولاً</option>
@@ -188,7 +139,7 @@
     <main class="max-w-7xl mx-auto px-4">
         <!-- Grid for Products -->
         <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            <!-- Product cards dynamically populated by JavaScript -->
+            <!-- Product cards dynamically populated -->
         </div>
 
         <!-- Empty State Container -->
@@ -198,119 +149,155 @@
             </div>
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">لم نجد أي منتجات!</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-4">جرب البحث بكلمة أخرى أو اختر تصنيف مختلف.</p>
-            <button id="btn-reset-filters" class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-all">
+            <button id="btn-reset-filters" class="px-4 py-2 bg-emerald-700 text-white rounded-xl text-sm font-semibold hover:bg-emerald-800 transition-all">
                 إعادة ضبط الفلاتر
             </button>
         </div>
     </main>
 
-    <!-- Sticky Bottom Bar (Cart Quick Action & WhatsApp) -->
-    <div id="bottom-bar" class="fixed bottom-0 left-0 right-0 w-full bg-surface dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(30,41,59,0.12)] rounded-t-2xl z-40 px-4 py-3 pb-safe">
-        <div class="max-w-4xl mx-auto flex flex-col gap-2">
-            <div class="flex justify-between items-center px-1">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="cart-summary-text" class="font-bold text-sm sm:text-base text-on-surface dark:text-slate-100">
-                        السلة: 0 مواد مختارة
-                    </span>
+    <!-- FLOATING CART BAR (Clean Overhauled Single CTA Action) -->
+    <div id="bottom-bar" class="fixed bottom-3 left-0 right-0 w-full z-40 px-4 max-w-2xl mx-auto pointer-events-none">
+        <div class="pointer-events-auto bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md p-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3 animate-fade-in">
+            <div class="flex items-center gap-3 pr-2">
+                <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-600 text-white shadow-md">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span id="cart-badge-count" class="absolute -top-1.5 -right-1.5 bg-amber-500 text-slate-950 font-extrabold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shadow">0</span>
                 </div>
-                <button id="btn-open-cart-modal" class="text-primary dark:text-emerald-400 font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1">
-                    <span>عرض وحذف العناصر</span>
-                    <span class="material-symbols-outlined text-base">shopping_cart</span>
-                </button>
+                <div class="flex flex-col">
+                    <span id="cart-summary-title" class="font-bold text-sm text-slate-100">سلة الطلب الجملة</span>
+                    <span id="cart-summary-sub" class="text-xs text-slate-300">0 مواد مختارات في العربة</span>
+                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button id="btn-print-cart-bottom" class="w-full bg-blue-700 dark:bg-blue-600 text-white font-bold text-xs sm:text-sm py-3 rounded-xl hover:bg-blue-800 active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">print</span>
-                    <span>📄 طباعة القائمة</span>
-                </button>
-                <button id="btn-checkout-whatsapp" class="w-full bg-[#25D366] text-white font-bold text-xs sm:text-sm py-3 rounded-xl hover:bg-[#1EBE5C] active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-1.5 group">
-                    <svg class="w-4 h-4 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                    <span>📲 إرسال للتاجر</span>
-                </button>
-                <button id="btn-export-pdf-bottom" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-bold text-xs sm:text-sm py-3 rounded-xl active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">visibility</span>
-                    <span>👁️ عرض القائمة PDF</span>
-                </button>
-            </div>
+            
+            <button id="btn-open-checkout" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl active:scale-95 transition-all shadow-md flex items-center gap-2">
+                <span>عرض العربة / إتمام الطلب</span>
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+            </button>
         </div>
     </div>
 
-    <!-- MODAL 1: Cart Drawer / Modal -->
-    <div id="modal-cart" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-surface dark:bg-slate-800 w-full max-w-xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slide-up border border-slate-200 dark:border-slate-700">
-            <!-- Header -->
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary dark:text-emerald-400">shopping_cart</span>
-                    <h2 class="font-bold text-lg text-slate-800 dark:text-slate-100">سلة الطلب بالجملة</h2>
+    <!-- MODAL 1: سلة الطلب بالجملة — Full-Screen Mobile Sheet -->
+    <div id="modal-cart" class="hidden fixed inset-0 z-[60] modal-backdrop flex flex-col">
+        <div class="bg-slate-50 dark:bg-slate-900 w-full h-full flex flex-col overflow-hidden">
+            <!-- STICKY HEADER -->
+            <header class="flex-shrink-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center justify-between px-4 h-16">
+                    <button class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-all">
+                        <span class="material-symbols-outlined" style="font-size:22px">close</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600" style="font-size:20px;font-variation-settings:'FILL' 1">shopping_cart</span>
+                        <h2 class="font-bold text-[17px] text-slate-800 dark:text-white">سلة الطلب بالجملة</h2>
+                        <span id="checkout-items-count-badge" class="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div class="w-11"></div>
                 </div>
-                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
+            </header>
 
-            <!-- Content Area -->
-            <div class="p-6 overflow-y-auto flex-1 flex flex-col gap-4">
-                <!-- Customer Details Form -->
-                <div class="bg-emerald-50/60 dark:bg-slate-700/40 p-4 rounded-xl border border-emerald-100 dark:border-slate-600 flex flex-col gap-3">
-                    <h4 class="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">person</span>
-                        بيانات الزبون والعنوان (مهمة للطلب)
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input id="input-merchant-name" type="text" placeholder="اسم الزبون *" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 focus:ring-primary font-medium">
-                        <input id="input-shop-name" type="text" placeholder="اسم المحل / السوبرماركت" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 focus:ring-primary">
-                        <input id="input-customer-phone" type="tel" placeholder="رقم هاتف الزبون *" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 focus:ring-primary font-medium">
-                        <input id="input-customer-address" type="text" placeholder="العنوان الكامل (المدينة / الشارع) *" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 focus:ring-primary font-medium">
+            <!-- SCROLLABLE BODY -->
+            <main class="flex-1 overflow-y-auto" style="padding-bottom:88px">
+                <div class="px-4 pt-4 pb-2 flex flex-col gap-4">
+
+                    <!-- Customer Info Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+                        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-emerald-600" style="font-size:16px;font-variation-settings:'FILL' 1">person</span>
+                                </div>
+                                <h3 class="font-bold text-[13px] text-slate-700 dark:text-slate-200">معلومات الزبون</h3>
+                            </div>
+                            <span id="cart-autosave-badge" class="hidden items-center gap-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                <span class="material-symbols-outlined" style="font-size:13px;font-variation-settings:'FILL' 1">check_circle</span>
+                                تم الحفظ تلقائياً
+                            </span>
+                        </div>
+                        <div class="px-4 pb-4 flex flex-col gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">اسم الزبون / الماركت</label>
+                                <input id="input-customer-name" type="text" placeholder="مثال: ماركت الأمل، أبو أحمد..."
+                                    class="w-full h-12 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 text-sm text-slate-800 dark:text-white font-medium placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">رقم الهاتف</label>
+                                <div class="relative flex items-center">
+                                    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400 select-none border-l border-slate-200 dark:border-slate-600 pl-2.5 pr-0.5">+964</span>
+                                    <input id="input-customer-phone" type="tel" dir="ltr" placeholder="0773 000 0000"
+                                        class="w-full h-12 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl pr-20 pl-4 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 font-mono focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-left">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products List -->
+                    <section id="cart-items-list" class="flex flex-col gap-3"></section>
+
+                    <!-- Summary + Notes -->
+                    <div class="flex flex-col gap-3">
+
+                        <!-- Summary Box -->
+                        <div id="cart-order-summary" class="hidden bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-800/60 overflow-hidden">
+                            <div class="bg-emerald-600 px-4 py-2 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-white/90" style="font-size:15px">summarize</span>
+                                <span class="text-white font-bold text-xs">ملخص الطلب</span>
+                            </div>
+                            <div class="flex">
+                                <div class="flex-1 flex flex-col items-center py-4 gap-0.5">
+                                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">إجمالي الكراتين</span>
+                                    <span id="cart-total-cartons" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 leading-none">0</span>
+                                    <span class="text-[10px] text-slate-400">كرتون</span>
+                                </div>
+                                <div class="w-px bg-slate-200 dark:bg-slate-700 my-3"></div>
+                                <div class="flex-1 flex flex-col items-center py-4 gap-0.5">
+                                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">إجمالي القطع</span>
+                                    <span id="cart-total-pieces" class="text-3xl font-black text-blue-600 dark:text-blue-400 leading-none">0</span>
+                                    <span class="text-[10px] text-slate-400">قطعة مفردة</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4">
+                            <label class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2.5">
+                                <span class="material-symbols-outlined text-emerald-500" style="font-size:15px">edit_note</span>
+                                ملاحظات الطلب (اختياري)
+                            </label>
+                            <textarea id="input-order-notes"
+                                placeholder="مثال: توصيل قبل الظهر، لا تضع البضاعة أمام المحل..."
+                                class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"
+                                rows="3"></textarea>
+                        </div>
+
                     </div>
                 </div>
+            </main>
 
-                <!-- Items List Container -->
-                <div id="cart-items-list" class="flex flex-col gap-3">
-                    <!-- Populated dynamically -->
-                </div>
-
-                <!-- Order Notes Input -->
-                <div class="mt-2">
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ملاحظات خاصة بالطلب:</label>
-                    <textarea id="input-order-notes" rows="2" placeholder="أضف أي تعليمات للتوصيل أو مواصفات العبوات..." class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary"></textarea>
-                </div>
-            </div>
-
-            <!-- Footer Actions -->
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-2">
-                <button id="btn-clear-cart" class="w-full sm:w-auto text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-700 text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                    <span>تفريغ السلة</span>
-                </button>
-                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto justify-end">
-                    <button id="btn-print-cart-modal" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1 shadow-md">
-                        <span class="material-symbols-outlined text-sm">print</span>
-                        <span>📄 طباعة القائمة</span>
+            <!-- STICKY BOTTOM ACTION BAR -->
+            <div class="fixed bottom-0 left-0 right-0 z-[70] bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+                <div class="flex gap-3 items-center">
+                    <button id="btn-clear-cart"
+                        class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:border-red-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-slate-700 active:scale-90 transition-all"
+                        title="تفريغ السلة">
+                        <span class="material-symbols-outlined" style="font-size:22px">delete_sweep</span>
                     </button>
-                    <button id="btn-export-pdf-modal" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1 shadow-md">
-                        <span class="material-symbols-outlined text-sm text-amber-400">visibility</span>
-                        <span>👁️ عرض PDF</span>
-                    </button>
-                    <button id="btn-send-whatsapp-modal" class="bg-[#25D366] text-white text-xs font-bold py-2.5 px-3 rounded-xl hover:bg-[#1EBE5C] flex items-center justify-center gap-1 shadow-md">
-                        <span class="material-symbols-outlined text-sm">send</span>
-                        <span>إرسال للتاجر</span>
+                    <button id="btn-send-whatsapp-modal"
+                        class="flex-1 h-12 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.97] text-white font-bold text-[14px] sm:text-[15px] rounded-xl shadow-lg shadow-emerald-600/25 transition-all">
+                        <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1">picture_as_pdf</span>
+                        تأكيد الطلب وإرسال الفاتورة PDF
                     </button>
                 </div>
             </div>
-            </div>
+
         </div>
     </div>
+
 
     <!-- MODAL 2: Barcode Scanner Modal -->
     <div id="modal-barcode" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
-        <div class="bg-surface dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
             <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary dark:text-emerald-400">qr_code_scanner</span>
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400">qr_code_scanner</span>
                     <h3 class="font-bold text-slate-800 dark:text-slate-100">مسح الباركود</h3>
                 </div>
                 <button class="btn-close-modal p-1 text-slate-400 hover:text-slate-600 rounded-full">
@@ -328,93 +315,18 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">أو أدخل رقم الباركود يدوياً للبحث الفوري:</p>
                     <div class="flex gap-2">
                         <input id="input-manual-barcode" type="text" placeholder="مثال: 6281007000018" class="text-xs w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5">
-                        <button id="btn-submit-barcode" class="bg-primary text-white text-xs font-semibold px-4 rounded-xl hover:bg-emerald-700">
+                        <button id="btn-submit-barcode" class="bg-emerald-700 text-white text-xs font-semibold px-4 rounded-xl hover:bg-emerald-800">
                             بحث
                         </button>
                     </div>
                 </div>
-
-                <!-- Quick Sample Barcode Simulation Buttons -->
-                <div class="bg-slate-50 dark:bg-slate-700/40 p-3 rounded-xl">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block mb-2 font-semibold">اختبار سريع لبث باركود توضيحي:</span>
-                    <div id="simulated-barcodes-list" class="flex flex-wrap gap-1.5">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: Add New Product Modal (Catalog Manager) -->
-    <div id="modal-add-product" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
-        <div class="bg-surface dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
-            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary dark:text-emerald-400">add_box</span>
-                    <h3 class="font-bold text-slate-800 dark:text-slate-100">إضافة منتج جديد للكتالوج</h3>
-                </div>
-                <button class="btn-close-modal p-1 text-slate-400 hover:text-slate-600 rounded-full">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-
-            <form id="form-add-product" class="p-5 flex flex-col gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">اسم المنتج *</label>
-                    <input id="new-prod-name" required type="text" placeholder="مثال: حليب كامل الدسم 1 لتر" class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">التصنيف *</label>
-                        <select id="new-prod-category" required class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                            <option value="ألبان وأجبان">ألبان وأجبان</option>
-                            <option value="مشروبات وعصائر">مشروبات وعصائر</option>
-                            <option value="معلبات وزيوت">معلبات وزيوت</option>
-                            <option value="بسكويت وشوكولاتة">بسكويت وشوكولاتة</option>
-                            <option value="منظفات">منظفات</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">تعبئة الكرتون (عدد القطع) *</label>
-                        <input id="new-prod-pack" required type="number" min="1" value="12" class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">رمز الباركود</label>
-                        <input id="new-prod-barcode" type="text" placeholder="628..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">حالة التوفر</label>
-                        <select id="new-prod-stock" class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                            <option value="true">متوفر في المستودع</option>
-                            <option value="false">نفذت الكمية</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">رابط صورة المنتج (URL)</label>
-                    <input id="new-prod-image" type="url" placeholder="https://..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 focus:ring-primary">
-                </div>
-
-                <div class="mt-2 flex justify-end gap-2">
-                    <button type="button" class="btn-close-modal text-xs font-semibold px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600">
-                        إلغاء
-                    </button>
-                    <button type="submit" class="bg-primary text-white text-xs font-bold px-5 py-2 rounded-xl hover:bg-emerald-700 shadow-md">
-                        حفظ المنتَج
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 4: Product Detail Lightbox Modal -->
+    <!-- MODAL 3: Product Detail Lightbox Modal -->
     <div id="modal-product-detail" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
-        <div class="bg-surface dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
             <div class="relative w-full h-56 bg-slate-100 dark:bg-slate-900">
                 <img id="detail-prod-img" src="" alt="صورة المنتج" class="w-full h-full object-contain p-4">
                 <button class="btn-close-modal absolute top-3 left-3 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-full text-slate-600 dark:text-slate-300">
@@ -428,8 +340,8 @@
                 </div>
                 <p id="detail-prod-category" class="text-xs text-slate-500 dark:text-slate-400"></p>
                 <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl text-xs flex justify-between items-center">
-                    <span>التعبئة الرسمية:</span>
-                    <span id="detail-prod-pack" class="font-bold text-primary dark:text-emerald-400"></span>
+                    <span>التعبئة الرسمية للكرتون:</span>
+                    <span id="detail-prod-pack" class="font-bold text-emerald-600 dark:text-emerald-400"></span>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl text-xs flex justify-between items-center">
                     <span>رمز الباركود:</span>
@@ -440,13 +352,74 @@
         </div>
     </div>
 
+    <!-- MODAL 4: Quick Unit & Quantity Selection Modal (نافذة اختيار كرتون أو قطعة) -->
+    <div id="modal-unit-selector" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700 animate-slide-up">
+            
+            <!-- Header -->
+            <div class="px-5 py-3.5 bg-emerald-50/80 dark:bg-slate-800 border-b border-emerald-100 dark:border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600">add_shopping_cart</span>
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">إضافة المنتج للعربة</h3>
+                </div>
+                <button class="btn-close-modal p-1 text-slate-400 hover:text-slate-600 rounded-full">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-5 flex flex-col gap-4">
+                <!-- Product Preview Info -->
+                <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-600">
+                    <img id="selector-prod-img" src="" alt="" class="w-12 h-12 object-contain rounded-xl bg-white p-1 border border-slate-200 dark:border-slate-600 flex-shrink-0">
+                    <div class="flex flex-col min-w-0">
+                        <h4 id="selector-prod-name" class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate"></h4>
+                        <span id="selector-prod-pack" class="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5"></span>
+                    </div>
+                </div>
+
+                <!-- Unit Choice Options (كرتون / قطعة) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">اختر نوع العبوة المطلوبة:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="opt-unit-carton" type="button" class="unit-opt-btn border-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 p-3 rounded-2xl flex flex-col items-center gap-1 transition-all shadow-sm">
+                            <span class="text-xl">📦</span>
+                            <span class="font-bold text-xs">كرتون</span>
+                        </button>
+                        
+                        <button id="opt-unit-piece" type="button" class="unit-opt-btn border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 p-3 rounded-2xl flex flex-col items-center gap-1 transition-all">
+                            <span class="text-xl">🧩</span>
+                            <span class="font-bold text-xs">قطع (حبة)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quantity Selector -->
+                <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-600">
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">تحديد الكمية:</span>
+                    <div class="flex items-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden shadow-sm">
+                        <button id="btn-selector-dec" type="button" class="w-8 h-8 font-bold text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center justify-center active:scale-90 transition-transform">-</button>
+                        <span id="selector-qty-val" class="px-3 font-extrabold text-sm text-emerald-800 dark:text-emerald-300 min-w-[28px] text-center">1</span>
+                        <button id="btn-selector-inc" type="button" class="w-8 h-8 font-bold text-sm text-emerald-700 dark:text-emerald-400 hover:bg-slate-100 flex items-center justify-center active:scale-90 transition-transform">+</button>
+                    </div>
+                </div>
+
+                <!-- Submit Add Button -->
+                <button id="btn-confirm-add-unit" type="button" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-xl active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2 mt-1">
+                    <span class="material-symbols-outlined text-base">shopping_cart</span>
+                    <span>تأكيد الإضافة إلى السلة</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SIDE DRAWER MENU -->
     <div id="side-menu" class="hidden fixed inset-0 z-50 modal-backdrop">
-        <div class="bg-surface dark:bg-slate-800 w-72 h-full shadow-2xl flex flex-col p-6 border-l border-slate-200 dark:border-slate-700 animate-slide-up sm:animate-none">
+        <div class="bg-white dark:bg-slate-800 w-72 h-full shadow-2xl flex flex-col p-6 border-l border-slate-200 dark:border-slate-700 animate-slide-up sm:animate-none">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">📦</span>
-                    <h3 class="font-bold text-lg text-primary dark:text-emerald-400">كتالوج الجملة</h3>
+                    <h3 class="font-bold text-lg text-emerald-800 dark:text-emerald-400">كتالوج الجملة</h3>
                 </div>
                 <button id="btn-close-side-menu" class="p-1 text-slate-400 hover:text-slate-600 rounded-full">
                     <span class="material-symbols-outlined">close</span>
@@ -454,10 +427,10 @@
             </div>
 
             <div class="flex flex-col gap-2 flex-1">
-                <button id="menu-btn-add-product" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors">
-                    <span class="material-symbols-outlined text-primary dark:text-emerald-400">add_circle</span>
-                    <span>إضافة منتج جديد</span>
-                </button>
+                <a href="index.html" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400">storefront</span>
+                    <span>الكتالوج الرئيسي</span>
+                </a>
                 <button id="menu-btn-only-instock" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors">
                     <span class="material-symbols-outlined text-emerald-600">check_circle</span>
                     <span>عرض المتوفر فقط</span>
@@ -469,16 +442,20 @@
             </div>
 
             <div class="pt-4 border-t border-slate-200 dark:border-slate-700 text-center text-[11px] text-slate-400">
-                موقع الجملة السريعة v2.0 - تفاعلي ⚡
+                موقع الجملة السريعة v3.0 - تفاعلي ⚡
             </div>
         </div>
     </div>
 
-    <!-- Printable Order Sheet Container (For Direct A4 Printing) -->
-    <div id="printable-order-sheet" class="hidden"></div>
+    <!-- Hidden Invoice Template for PDF Generation -->
+    <div id="pdf-invoice-wrapper" style="position: absolute; left: -9999px; top: -9999px; width: 750px; background: #ffffff;">
+        <div id="pdf-invoice-template" style="padding: 24px; font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; direction: rtl; color: #1e293b; background: #ffffff;">
+            <!-- Rendered dynamically via JavaScript -->
+        </div>
+    </div>
 
     <!-- Application Script -->
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="data.js?v=4"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>

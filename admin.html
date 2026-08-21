@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الجملة السريعة - لوحة تحكم الإدارة (Admin CMS)</title>
+    
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts & Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c49",
+                        "primary-hover": "#005236"
+                    },
+                    fontFamily: {
+                        sans: ["IBM Plex Sans Arabic", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen font-sans transition-colors duration-200">
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- 1. Password Protection Modal Overlay (LOGIN) -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 p-6 sm:p-8 flex flex-col gap-6 text-center animate-fade-in">
+            <div class="w-16 h-16 bg-emerald-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-emerald-700 dark:text-emerald-400 mx-auto shadow-sm">
+                <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
+            </div>
+            
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-1">لوحة الإدارة - الجملة السريعة</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">أدخل كلمة المرور للوصول إلى إدارة المنتجات والطلبات</p>
+            </div>
+
+            <form id="form-admin-login" class="flex flex-col gap-3">
+                <div>
+                    <input id="admin-password-input" type="password" required placeholder="كلمة المرور (الافتراضية: admin123)" class="w-full text-center text-sm bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-3 focus:ring-2 focus:ring-emerald-600 font-mono text-slate-800 dark:text-white">
+                </div>
+                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm py-3 rounded-xl shadow-md transition-all">
+                    تسجيل الدخول
+                </button>
+            </form>
+
+            <a href="index.html" class="text-xs text-slate-500 hover:text-emerald-700 underline font-medium">
+                العودة إلى الكتالوج الرئيسي
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. Admin CMS Content View (Hidden until Auth) -->
+    <div id="admin-dashboard" class="hidden min-h-screen flex flex-col">
+        
+        <!-- Admin Top Navigation Header -->
+        <header class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700">
+            <div class="flex flex-row justify-between items-center w-full px-4 h-16 max-w-7xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="p-2 text-slate-500 hover:text-emerald-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="العودة للمتجر">
+                        <span class="material-symbols-outlined text-xl">arrow_forward</span>
+                    </a>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">⚙️</span>
+                        <h1 class="text-base sm:text-lg font-bold text-slate-800 dark:text-white">
+                            لوحة التحكم للإدارة (CMS)
+                        </h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn-admin-logout" class="text-xs text-red-600 dark:text-red-400 font-semibold px-3 py-1.5 rounded-xl border border-red-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-slate-700 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                        <span>قفل اللوحة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Navigation Tabs -->
+            <div class="bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700">
+                <div class="flex gap-2 px-4 max-w-7xl mx-auto overflow-x-auto no-scrollbar">
+                    <button data-tab="tab-products" class="btn-admin-tab py-3 px-4 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 transition-colors">
+                        <span class="material-symbols-outlined text-sm">inventory_2</span>
+                        <span>إدارة المنتجات (CRUD)</span>
+                    </button>
+                    <button data-tab="tab-orders" class="btn-admin-tab py-3 px-4 text-xs font-bold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-emerald-700 flex items-center gap-1.5 transition-colors">
+                        <span class="material-symbols-outlined text-sm">receipt_long</span>
+                        <span>جدول الطلبات الواردة</span>
+                        <span id="badge-pending-orders" class="bg-amber-500 text-slate-950 font-extrabold text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button data-tab="tab-settings" class="btn-admin-tab py-3 px-4 text-xs font-bold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-emerald-700 flex items-center gap-1.5 transition-colors">
+                        <span class="material-symbols-outlined text-sm">settings</span>
+                        <span>الإعدادات والواتساب</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Canvas -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+            
+            <!-- TAB 1: PRODUCTS MANAGEMENT (CRUD) -->
+            <section id="tab-products" class="admin-tab-content flex flex-col gap-5">
+                
+                <!-- Action Bar -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-2 w-full sm:w-auto flex-1">
+                        <div class="relative w-full max-w-md">
+                            <span class="material-symbols-outlined absolute right-3 top-2.5 text-slate-400 text-sm">search</span>
+                            <input id="admin-products-search" type="text" placeholder="ابحث باسم المنتج، الفئة أو رقم الباركود..." class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl pr-9 pl-3 p-2.5">
+                        </div>
+                    </div>
+
+                    <button id="btn-open-add-product" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-sm">add_circle</span>
+                        <span>إضافة منتج جديد</span>
+                    </button>
+                </div>
+
+                <!-- Products Data Grid / Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">المنتج</th>
+                                    <th class="p-3.5">الكود الخاص</th>
+                                    <th class="p-3.5">التصنيف</th>
+                                    <th class="p-3.5">تعبئة الكرتون</th>
+                                    <th class="p-3.5">الباركود</th>
+                                    <th class="p-3.5">حالة التوفر</th>
+                                    <th class="p-3.5 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-products-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ORDERS DASHBOARD -->
+            <section id="tab-orders" class="admin-tab-content hidden flex flex-col gap-5">
+                
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col">
+                        <span class="text-xs text-slate-500 font-medium">إجمالي الطلبات</span>
+                        <span id="stat-total-orders" class="text-xl font-bold text-slate-800 dark:text-white mt-1">0</span>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-amber-200 dark:border-slate-700 flex flex-col">
+                        <span class="text-xs text-amber-800 dark:text-amber-400 font-bold">قيد الانتظار</span>
+                        <span id="stat-pending-orders" class="text-xl font-bold text-amber-700 dark:text-amber-300 mt-1">0</span>
+                    </div>
+                    <div class="bg-emerald-50 dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-emerald-200 dark:border-slate-700 flex flex-col">
+                        <span class="text-xs text-emerald-800 dark:text-emerald-400 font-bold">الطلبات المكتملة</span>
+                        <span id="stat-completed-orders" class="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">0</span>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-blue-200 dark:border-slate-700 flex flex-col">
+                        <span class="text-xs text-blue-800 dark:text-blue-400 font-bold">المؤكدة</span>
+                        <span id="stat-confirmed-orders" class="text-xl font-bold text-blue-700 dark:text-blue-300 mt-1">0</span>
+                    </div>
+                </div>
+
+                <!-- Orders Filter & Actions -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex justify-between items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">فلترة حسب الحالة:</label>
+                        <select id="select-order-status-filter" class="text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl py-1.5 px-3 font-semibold">
+                            <option value="ALL">جميع الطلبات</option>
+                            <option value="Pending">قيد الانتظار</option>
+                            <option value="Confirmed">مؤكد</option>
+                            <option value="Completed">مكتمل</option>
+                            <option value="Cancelled">ملغى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Orders Data Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">رقم الطلب</th>
+                                    <th class="p-3.5">التاريخ والوقت</th>
+                                    <th class="p-3.5">اسم الزبون / المحل</th>
+                                    <th class="p-3.5">رقم الهاتف</th>
+                                    <th class="p-3.5">عدد المواد</th>
+                                    <th class="p-3.5">حالة الطلب</th>
+                                    <th class="p-3.5 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: SETTINGS -->
+            <section id="tab-settings" class="admin-tab-content hidden flex flex-col gap-5 max-w-2xl">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-white border-b pb-3 border-slate-100 dark:border-slate-700 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600">settings</span>
+                        إعدادات النظام والواتساب
+                    </h3>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">رقم واتساب التاجر (المستقبل للطلبات) *</label>
+                        <input id="setting-merchant-phone" type="tel" required placeholder="مثال: 9647735482884 أو 07735482884" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-mono" dir="ltr">
+                        <span class="text-[11px] text-slate-400 mt-1 block">اكتب الرقم بالرمز الدولي أو المحلي (مثال: 9647735482884 أو 07735482884).</span>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">تغيير كلمة مرور الإدارة *</label>
+                        <input id="setting-admin-password" type="password" required placeholder="كلمة المرور الجديدة" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-mono">
+                    </div>
+
+                    <button id="btn-save-settings" class="mt-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-md transition-all self-start flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm">save</span>
+                        <span>حفظ التغييرات</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: Add / Edit Product -->
+    <div id="modal-product-form" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400" id="prod-modal-icon">add_box</span>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100" id="prod-modal-title">إضافة منتج جديد</h3>
+                </div>
+                <button class="btn-close-modal p-1 text-slate-400 hover:text-slate-600 rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="form-save-product" class="p-5 flex flex-col gap-3">
+                <input type="hidden" id="prod-id">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">اسم المنتج *</label>
+                    <input id="prod-name" required type="text" placeholder="مثال: حليب كامل الدسم المراعي 1 لتر" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">التصنيف *</label>
+                        <select id="prod-category" required class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-semibold">
+                            <option value="ألبان وأجبان">ألبان وأجبان</option>
+                            <option value="مشروبات وعصائر">مشروبات وعصائر</option>
+                            <option value="معلبات وزيوت">معلبات وزيوت</option>
+                            <option value="بسكويت وشوكولاتة">بسكويت وشوكولاتة</option>
+                            <option value="منظفات">منظفات</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">تعبئة الكرتون (عدد القطع) *</label>
+                        <input id="prod-carton-pack" required type="number" min="1" value="12" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">الكود الخاص (4 أرقام) *</label>
+                        <input id="prod-item-code" type="text" maxlength="4" placeholder="مثال: 1001" class="w-full text-xs bg-amber-50 dark:bg-slate-700 border border-amber-300 dark:border-slate-600 rounded-xl p-2.5 font-bold font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">رمز الباركود</label>
+                        <input id="prod-barcode" type="text" placeholder="628..." class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">حالة التوفر</label>
+                    <select id="prod-in-stock" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-semibold">
+                        <option value="true">متوفر في المستودع</option>
+                        <option value="false">نفدت الكمية</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">قيد وحدة البيع والشراء</label>
+                    <select id="prod-unit-restriction" class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5 font-semibold">
+                        <option value="both">متاح (كرتون أو قطعة)</option>
+                        <option value="carton-only">بيع بالكارتون فقط (Carton Only)</option>
+                        <option value="piece-only">بيع بالمفرد فقط (Piece Only)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">رابط صورة المنتج (URL)</label>
+                    <input id="prod-image" type="url" placeholder="https://..." class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5" dir="ltr">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">وصف المنتج الإضافي</label>
+                    <textarea id="prod-desc" rows="2" placeholder="أضف مواصفات المنتج أو وصف التفاصيل..." class="w-full text-xs bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl p-2.5"></textarea>
+                </div>
+
+                <div class="mt-2 flex justify-end gap-2">
+                    <button type="button" class="btn-close-modal text-xs font-semibold px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600">
+                        إلغاء
+                    </button>
+                    <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md">
+                        حفظ بيانات المنتَج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Order Detail Lightbox -->
+    <div id="modal-order-detail" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600">receipt_long</span>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100" id="detail-order-title">تفاصيل الطلب</h3>
+                </div>
+                <button class="btn-close-modal p-1 text-slate-400 hover:text-slate-600 rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-5 flex flex-col gap-4">
+                <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl text-xs flex flex-col gap-1.5">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">اسم الزبون / المحل:</span>
+                        <span id="detail-customer-name" class="font-bold text-slate-800 dark:text-white"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">رقم الهاتف:</span>
+                        <span id="detail-customer-phone" class="font-bold text-emerald-700 dark:text-emerald-400" dir="ltr"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">تاريخ الطلب:</span>
+                        <span id="detail-order-date" class="font-medium"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">ملاحظات:</span>
+                        <span id="detail-order-notes" class="font-medium text-slate-700 dark:text-slate-200"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">قائمة المواد المطلوبة:</h4>
+                    <div id="detail-order-items-list" class="flex flex-col gap-2 max-h-[220px] overflow-y-auto">
+                        <!-- Items rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <a id="btn-order-direct-whatsapp" href="#" target="_blank" class="bg-[#25D366] text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1 shadow-md">
+                        <span class="material-symbols-outlined text-sm">chat</span>
+                        <span>مراسلة عبر واتساب</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="data.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

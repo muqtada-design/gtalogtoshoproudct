@@ -556,7 +556,7 @@ async function handleCheckoutAndWhatsApp() {
         return;
     }
 
-    // تعطل زر الإرسال مع إظهار مؤشر التحميل لتجنب النقرات المتكررة وتجمّد الشاشة
+    // تعطل زر الإرسال مع إظهار مؤشر التحميل لتجنب النقرات المتكررة
     let originalBtnHtml = "";
     if (checkoutBtn) {
         originalBtnHtml = checkoutBtn.innerHTML;
@@ -568,14 +568,17 @@ async function handleCheckoutAndWhatsApp() {
         `;
     }
 
+    let tempDiv = null;
+    let orderId = "";
+    let waUrl = "";
+
     try {
-        // 1. توليد رقم طلب فريد
+        // 1. توليد رقم طلب فريد وتجهيز البيانات
         const orderNum = Math.floor(1000 + Math.random() * 9000);
-        const orderId = `ORD-${orderNum}`;
+        orderId = `ORD-${orderNum}`;
         const now = new Date();
         const formattedDate = now.toLocaleDateString("ar-EG") + " " + now.toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' });
 
-        // 2. تحضير قائمة المواد
         const orderItems = cartKeys.map(id => {
             const item = state.cart[id];
             const p = item.product;
@@ -601,7 +604,7 @@ async function handleCheckoutAndWhatsApp() {
             };
         });
 
-        // 3. إنشاء كائن الطلب وحفظه في قاعدة البيانات المحلية (Persistent DB)
+        // 2. حفظ الطلب في قاعدة البيانات المحلية (Persistent DB) والـ LocalStorage
         const newOrder = {
             id: orderId,
             customerName: customerName,
@@ -610,90 +613,14 @@ async function handleCheckoutAndWhatsApp() {
             items: orderItems,
             totalItemsCount: orderItems.length,
             createdAt: now.toISOString(),
-            status: "Pending" // قيد الانتظار
+            status: "Pending"
         };
-
         addOrder(newOrder);
 
-        // حفظ الاسم والرقم تلقائياً في LocalStorage للطلبات القادمة
         localStorage.setItem("wholesale_saved_customer_name", customerName);
         localStorage.setItem("wholesale_saved_customer_phone", customerPhone);
 
-        // 4. بناء وتعبئة قالب الفاتورة الـ RTL المخصص للـ PDF
-        const templateContainer = document.getElementById("pdf-invoice-template");
-        if (templateContainer) {
-            let tableRowsHtml = "";
-            orderItems.forEach((it, idx) => {
-                const bgClass = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
-                tableRowsHtml += `
-                    <tr style="background-color: ${bgClass}; border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px 12px; text-align: center; font-weight: bold; color: #64748b;">${idx + 1}</td>
-                        <td style="padding: 10px 12px; text-align: right;">
-                            <div style="font-weight: bold; color: #0f172a;">${it.name}</div>
-                            ${it.itemCode ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">كود المنتج: ${it.itemCode}</div>` : ''}
-                        </td>
-                        <td style="padding: 10px 12px; text-align: center; color: #475569;">${it.cartonPack} قطعة / كرتون</td>
-                        <td style="padding: 10px 12px; text-align: center; font-weight: bold; color: #006c49; background-color: rgba(16, 185, 129, 0.05);">${it.quantityLabel}</td>
-                    </tr>
-                `;
-            });
-
-            templateContainer.innerHTML = `
-                <div style="padding: 24px; font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; direction: rtl; color: #1e293b; background: #ffffff;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #006c49; padding-bottom: 16px; margin-bottom: 20px;">
-                        <div>
-                            <h1 style="font-size: 24px; font-weight: 800; color: #006c49; margin: 0 0 4px 0;">الجملة السريعة</h1>
-                            <p style="font-size: 12px; color: #64748b; margin: 0;">كتالوج الطلبات الرقمية والفواتير الرسمية</p>
-                        </div>
-                        <div style="text-align: left; direction: ltr;">
-                            <div style="font-size: 16px; font-weight: 800; color: #006c49;">#${orderId}</div>
-                            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${formattedDate}</div>
-                        </div>
-                    </div>
-
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">اسم الزبون / المحل:</span>
-                            <strong style="font-size: 14px; color: #0f172a;">${customerName}</strong>
-                        </div>
-                        <div style="text-align: left;">
-                            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">رقم الهاتف:</span>
-                            <strong style="font-size: 14px; color: #0f172a; font-family: monospace;">${customerPhone}</strong>
-                        </div>
-                    </div>
-
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
-                        <thead>
-                            <tr style="background: #006c49; color: #ffffff;">
-                                <th style="padding: 10px 12px; text-align: center; width: 36px;">#</th>
-                                <th style="padding: 10px 12px; text-align: right;">المنتج</th>
-                                <th style="padding: 10px 12px; text-align: center;">تعبئة الكرتون</th>
-                                <th style="padding: 10px 12px; text-align: center;">الكمية المطلوبة</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRowsHtml}
-                        </tbody>
-                    </table>
-
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-top: 2px solid #f1f5f9; padding-top: 16px; margin-bottom: 20px;">
-                        <div style="max-width: 60%;">
-                            ${notes ? `<div style="font-size: 12px; color: #475569; background: #fffbebf5; border: 1px solid #fef3c7; padding: 8px 12px; border-radius: 8px;"><strong style="color: #92400e;">ملاحظات الطلب:</strong> ${notes}</div>` : ''}
-                        </div>
-                        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 20px; text-align: center;">
-                            <span style="font-size: 11px; font-weight: 700; color: #047857; display: block; margin-bottom: 2px;">إجمالي المواد</span>
-                            <strong style="font-size: 18px; color: #065f46;">${orderItems.length} عنصر</strong>
-                        </div>
-                    </div>
-
-                    <div style="text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
-                        شُكراً لتعاملكم مع الجملة السريعة ⚡ • الفاتورة مولدة إلكترونياً
-                    </div>
-                </div>
-            `;
-        }
-
-        // 5. صياغة النص والتوجيه للواتساب
+        // 3. تجهيز رابط واتساب التاجر
         const settings = getSettings();
         const rawPhone = settings.merchantPhone || "9647735482884";
         const merchantPhone = cleanWhatsAppPhone(rawPhone);
@@ -708,82 +635,144 @@ async function handleCheckoutAndWhatsApp() {
 📎 *تم تحميل وتوليد ملف فاتورة الـ PDF المرفق بنجاح.*
 يرجى إرفاق ملف الفاتورة المُنزل على جهازكم وتأكيد استلام الطلب!`;
 
-        const waUrl = `https://wa.me/${merchantPhone}?text=${encodeURIComponent(waText)}`;
+        waUrl = `https://wa.me/${merchantPhone}?text=${encodeURIComponent(waText)}`;
 
-        // 6. تحويل القالب إلى PDF وتوليده بنجاح
-        if (window.html2pdf && templateContainer) {
-            const fileName = `فاتورة_طلب_${orderId}.pdf`;
+        // 4. إنشاء عنصر الفاتورة في الـ DOM بشكل مرئي مؤقتاً خارج الشاشة (بدون display:none وبدون صور خارجية لتفادي التعليق CORS)
+        tempDiv = document.createElement("div");
+        tempDiv.id = "temp-pdf-export-container";
+        tempDiv.style.position = "fixed";
+        tempDiv.style.left = "-9999px";
+        tempDiv.style.top = "0px";
+        tempDiv.style.width = "750px";
+        tempDiv.style.background = "#ffffff";
+        tempDiv.style.zIndex = "-100";
+
+        let tableRowsHtml = "";
+        orderItems.forEach((it, idx) => {
+            const bgClass = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
+            tableRowsHtml += `
+                <tr style="background-color: ${bgClass}; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px 12px; text-align: center; font-weight: bold; color: #64748b;">${idx + 1}</td>
+                    <td style="padding: 10px 12px; text-align: right;">
+                        <div style="font-weight: bold; color: #0f172a;">${it.name}</div>
+                        ${it.itemCode ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">كود المنتج: ${it.itemCode}</div>` : ''}
+                    </td>
+                    <td style="padding: 10px 12px; text-align: center; color: #475569;">${it.cartonPack} قطعة / كرتون</td>
+                    <td style="padding: 10px 12px; text-align: center; font-weight: bold; color: #006c49; background-color: rgba(16, 185, 129, 0.05);">${it.quantityLabel}</td>
+                </tr>
+            `;
+        });
+
+        tempDiv.innerHTML = `
+            <div style="padding: 28px; font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; direction: rtl; color: #1e293b; background: #ffffff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #006c49; padding-bottom: 16px; margin-bottom: 20px;">
+                    <div>
+                        <h1 style="font-size: 24px; font-weight: 800; color: #006c49; margin: 0 0 4px 0;">الجملة السريعة</h1>
+                        <p style="font-size: 12px; color: #64748b; margin: 0;">كتالوج الطلبات الرقمية والفواتير الرسمية</p>
+                    </div>
+                    <div style="text-align: left; direction: ltr;">
+                        <div style="font-size: 16px; font-weight: 800; color: #006c49;">#${orderId}</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${formattedDate}</div>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">اسم الزبون / المحل:</span>
+                        <strong style="font-size: 14px; color: #0f172a;">${customerName}</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <span style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">رقم الهاتف:</span>
+                        <strong style="font-size: 14px; color: #0f172a; font-family: monospace;">${customerPhone}</strong>
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #006c49; color: #ffffff;">
+                            <th style="padding: 10px 12px; text-align: center; width: 36px;">#</th>
+                            <th style="padding: 10px 12px; text-align: right;">المنتج</th>
+                            <th style="padding: 10px 12px; text-align: center;">تعبئة الكرتون</th>
+                            <th style="padding: 10px 12px; text-align: center;">الكمية المطلوبة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRowsHtml}
+                    </tbody>
+                </table>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-top: 2px solid #f1f5f9; padding-top: 16px; margin-bottom: 20px;">
+                    <div style="max-width: 60%;">
+                        ${notes ? `<div style="font-size: 12px; color: #475569; background: #fffbebf5; border: 1px solid #fef3c7; padding: 8px 12px; border-radius: 8px;"><strong style="color: #92400e;">ملاحظات الطلب:</strong> ${notes}</div>` : ''}
+                    </div>
+                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 20px; text-align: center;">
+                        <span style="font-size: 11px; font-weight: 700; color: #047857; display: block; margin-bottom: 2px;">إجمالي المواد</span>
+                        <strong style="font-size: 18px; color: #065f46;">${orderItems.length} عنصر</strong>
+                    </div>
+                </div>
+
+                <div style="text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+                    شُكراً لتعاملكم مع الجملة السريعة ⚡ • الفاتورة مولدة إلكترونياً
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(tempDiv);
+
+        // 5. التصدير الآمن مع مهلة زمنية (Timeout Safety 6 ثوانٍ) لمنع التعليق مطلقاً
+        if (window.html2pdf) {
+            const cleanCustomerName = customerName.replace(/[^a-zA-Z0-9آ-ي]/g, "_") || "عميل";
+            const pdfFileName = `طلب_${cleanCustomerName}_${orderId}.pdf`;
+
             const opt = {
                 margin: [8, 8, 8, 8],
-                filename: fileName,
+                filename: pdfFileName,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
+                html2canvas: { scale: 1.5, useCORS: true, logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            let shareSuccessful = false;
+            const pdfPromise = window.html2pdf().set(opt).from(tempDiv).save();
 
-            // التأكد من دعم بيئة الأمن (HTTPS) ودعم المشاركة المباشرة للملفات
-            if (window.isSecureContext && navigator.canShare) {
-                try {
-                    const worker = window.html2pdf().set(opt).from(templateContainer);
-                    const pdfBlob = await worker.output('blob');
-                    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("PDF generation timeout")), 6000);
+            });
 
-                    if (navigator.canShare({ files: [pdfFile] })) {
-                        await navigator.share({
-                            title: `فاتورة طلب ${orderId} - الجملة السريعة`,
-                            text: `سلام عليكم، مرفق لكم فاتورة الطلب رقم ${orderId}`,
-                            files: [pdfFile]
-                        });
-                        shareSuccessful = true;
-                        showToast(`تم مشاركة فاتورة الطلب ${orderId} بنجاح!`, "success");
-                    }
-                } catch (shareErr) {
-                    console.log("تم إلغاء نافذة المشاركة أو عدم دعم البيئة للمشاركة المباشرة:", shareErr);
-                }
-            }
-
-            // الخيار الاحتياطي التلقائي (Fallback): التنزيل التلقائي لملف الـ PDF وفتح محادثة واتساب
-            if (!shareSuccessful) {
-                try {
-                    await window.html2pdf().set(opt).from(templateContainer).save();
-                    showToast(`تم تنزيل الفاتورة PDF (${orderId}) بنجاح!`, "success");
-                } catch (dlErr) {
-                    console.error("خطأ أثناء تنزيل الـ PDF:", dlErr);
-                }
-
-                setTimeout(() => {
-                    window.open(waUrl, "_blank");
-                }, 400);
-            }
+            await Promise.race([pdfPromise, timeoutPromise]);
+            showToast(`تم تنزيل فاتورة الـ PDF (${orderId}) بنجاح!`, "success");
         } else {
-            // فتح واتساب مباشرة في حال عدم توفر المكتبة
-            showToast(`تم تسجيل الطلب رقم ${orderId}! جاري التوجيه إلى واتساب...`, "success");
-            setTimeout(() => {
-                window.open(waUrl, "_blank");
-            }, 400);
+            showToast(`تم تسجيل الطلب رقم ${orderId} بنجاح!`, "success");
         }
 
     } catch (err) {
-        console.error("خطأ غير متوقع أثناء معالجة الطلب:", err);
-        showToast("حدث خطأ أثناء معالجة الطلب، يرجى المحاولة مرة أخرى.", "warning");
+        console.warn("تنويه أثناء تصدير الـ PDF (سيتم فتح الواتساب كالمعتاد):", err);
+        showToast(`تم تسجيل الطلب رقم ${orderId}! جاري فتح واتساب...`, "info");
     } finally {
-        // 7. تحديث حالة التطبيق وتنظيف السلة وتفعيل الأزرار (يتم دائماً لمنع تجمّد الشاشة)
+        // 6. التنظيف المضمون دائماً في كتلة finally
+        if (tempDiv && tempDiv.parentNode) {
+            tempDiv.parentNode.removeChild(tempDiv);
+        }
+
         if (checkoutBtn) {
             checkoutBtn.disabled = false;
             checkoutBtn.style.opacity = "1";
             if (originalBtnHtml) checkoutBtn.innerHTML = originalBtnHtml;
         }
 
-        // تفريغ العربة وتفريغ حقل الملاحظات
+        // تفريغ السلة والملاحظات
         state.cart = {};
         if (notesInput) notesInput.value = "";
 
-        // تحديث الواجهة وإغلاق النوافذ المنبثقة فوراً
         renderProducts();
         updateCartUI();
         closeAllModals();
+
+        // فتح واتساب التاجر في نافذة جديدة
+        if (waUrl) {
+            setTimeout(() => {
+                window.open(waUrl, "_blank");
+            }, 300);
+        }
     }
 }
 
